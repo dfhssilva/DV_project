@@ -1,3 +1,7 @@
+# Personalised
+data/airbnb_data.zip
+env/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
