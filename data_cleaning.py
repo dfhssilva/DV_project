@@ -46,3 +46,29 @@ abt_df = df1.merge(df3, how="left", on="host_id").merge(df4, how="left", on="pro
 
 
 
+# Drop columns not needed
+abt_df = abt_df.drop(columns = ["square_feet","review_scores_accuracy","review_scores_cleanliness",
+                                "review_scores_checkin","review_scores_communication","review_scores_value",
+                                "host_has_profile_pic", "host_identity_verified","neighbourhood_cleansed"])
+
+#Missing values treatment
+missings = abt_df.isnull().sum().reset_index()
+
+abt_df["cleaning_fee"] = abt_df["cleaning_fee"].fillna(0)
+abt_df.dropna(subset = ["review_scores_location"], inplace = True)
+abt_df.dropna(subset = ["host_listings_count"], inplace = True)
+abt_df["host_since"] = abt_df["host_since"].fillna("10/23/2012") #fill with mode
+abt_df["host_response_rate"] = abt_df["host_response_rate"].fillna("0%")
+abt_df["host_response_time"] = abt_df["host_response_time"].fillna("a few days or more")
+abt_df["host_is_superhost"] = abt_df["host_is_superhost"].fillna("f") #fill with mode
+
+listing_by_host = abt_df.groupby("host_id")["listing_id"].count().reset_index()
+listing_by_host = pd.DataFrame(listing_by_host)
+
+#Change Datatypes
+for i in abt_df["price"]:
+    abt_df[i] = abt_df[i].strip("$")
+abt_df["cleaning_fee"] = abt_df["cleaning_fee"].strip("$")
+abt_df.columns
+
+16932 13
