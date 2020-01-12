@@ -54,7 +54,7 @@ abt_df = abt_df.drop(columns = ["square_feet","review_scores_accuracy","review_s
 #Missing values treatment
 missings = abt_df.isnull().sum().reset_index()
 
-abt_df["cleaning_fee"] = abt_df["cleaning_fee"].fillna(0)
+abt_df["cleaning_fee"] = abt_df["cleaning_fee"].fillna("$0")
 abt_df.dropna(subset = ["review_scores_location"], inplace = True)
 abt_df.dropna(subset = ["host_listings_count"], inplace = True)
 abt_df["host_since"] = abt_df["host_since"].fillna("10/23/2012") #fill with mode
@@ -66,9 +66,17 @@ listing_by_host = abt_df.groupby("host_id")["listing_id"].count().reset_index()
 listing_by_host = pd.DataFrame(listing_by_host)
 
 #Change Datatypes
-for i in abt_df["price"]:
-    abt_df[i] = abt_df[i].strip("$")
-abt_df["cleaning_fee"] = abt_df["cleaning_fee"].strip("$")
+
+abt_df['price'] = abt_df['price'].str.strip("$")
+abt_df['price'] = abt_df['price'].str.strip(",")
+abt_df["cleaning_fee"] = abt_df["cleaning_fee"].str.strip("$")
+abt_df['cleaning_fee'] = abt_df['cleaning_fee'].str.strip(",")
+
+
+abt_df['price'] = abt_df['price'].astype(float)
+abt_df["cleaning_fee"] = abt_df["cleaning_fee"].astype(float)
+
+
 abt_df.columns
 
 16932 13
