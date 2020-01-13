@@ -32,13 +32,22 @@ fig.layout.sliders = [dict(
                 pad={"t": 20},
                 steps=[dict(label=i, method='restyle',  args=['xbins.size', i]) for i in range(1, 20)]
                 )]
-
+fig.update_layout(xaxis_title='Price ($)', yaxis_title='Relative frequencies', showlegend=False, title='Price distribution')
 pyo.plot(fig)
 
 
+data = [go.Bar(
+            x=df['room_type'].value_counts().values,
+            y=df['room_type'].value_counts().index,
+            orientation='h', marker=dict(color=['red', 'blue', 'green'])
+)]
+layout = go.Layout(title=go.layout.Title(text='Room Type'))
+fig2 = go.Figure(data=data, layout=layout)
+fig2.update_layout(xaxis_title="Number of listings")
+pyo.plot(fig2)
 
-labels = df['ordinal_rating'].value_counts().index
-values = df['ordinal_rating'].value_counts().values
 
-trace = go.Pie(labels=labels, values=values)
-pyo.plot([trace])
+fig3 = go.Figure()
+fig3.add_trace(go.Pie(labels=df['ordinal_rating'].value_counts().index, values=df['ordinal_rating'].value_counts().values))
+fig3.update_layout(title="Proportion of listing's rating")
+pyo.plot(fig3)
