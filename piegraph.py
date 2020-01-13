@@ -32,7 +32,7 @@ fig.layout.sliders = [dict(
                 pad={"t": 20},
                 steps=[dict(label=i, method='restyle',  args=['xbins.size', i]) for i in range(1, 20)]
                 )]
-fig.update_layout(xaxis_title='Price ($)')
+fig.update_layout(xaxis_title='Price ($)', yaxis_title='Relative frequencies', showlegend=False)
 pyo.plot(fig)
 
 
