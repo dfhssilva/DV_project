@@ -37,8 +37,6 @@ pyo.plot(fig)
 
 
 fig = go.Figure()
-labels = df['ordinal_rating'].value_counts().index
-values = df['ordinal_rating'].value_counts().values
-fig.add_trace(go.Pie(labels=labels, values=values))
+fig.add_trace(go.Pie(labels=df['ordinal_rating'].value_counts().index, values=df['ordinal_rating'].value_counts().values))
 fig.update_layout(title="Proportion of listing's rating")
 pyo.plot(fig)
