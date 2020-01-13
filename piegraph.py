@@ -32,13 +32,13 @@ fig.layout.sliders = [dict(
                 pad={"t": 20},
                 steps=[dict(label=i, method='restyle',  args=['xbins.size', i]) for i in range(1, 20)]
                 )]
-fig.update_layout(xaxis_title='Price ($)', yaxis_title='Relative frequencies', showlegend=False)
+fig.update_layout(xaxis_title='Price ($)', yaxis_title='Relative frequencies', showlegend=False, title='Price distribution')
 pyo.plot(fig)
 
 
-
+fig = go.Figure()
 labels = df['ordinal_rating'].value_counts().index
 values = df['ordinal_rating'].value_counts().values
-
-trace = go.Pie(labels=labels, values=values)
-pyo.plot([trace])
+fig.add_trace(go.Pie(labels=labels, values=values))
+fig.update_layout(title="Proportion of listing's rating")
+pyo.plot(fig)
