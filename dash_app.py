@@ -112,15 +112,11 @@ def update_graph(selectedlocation, selectedVariable):
                 )
         )
     )
-
-def selection():
-    pass
-
-# fig = go.Figure(data=data, layout=layout)  # Figure is composed by data(what you show) and layout(how you show)
-# pyo.plot(fig)
 if __name__ == '__main__':
     app.run_server()
 
+
+#--------------------------------- PRICE HISTOGRAM ---------------------------------------------------------------------
 
 hist_data = [df['price']]
 group_labels = ['distplot']
@@ -137,7 +133,7 @@ fig1.layout.sliders = [dict(
 fig1.update_layout(xaxis_title='Price ($)', yaxis_title='Relative frequencies', showlegend=False, title='Price distribution')
 pyo.plot(fig1)
 
-
+#------------------------------------- BAR CHART (ROOM_TYPE) -----------------------------------------------------------
 data = [go.Bar(
             x=df['room_type'].value_counts().values,
             y=df['room_type'].value_counts().index,
@@ -148,6 +144,7 @@ fig2 = go.Figure(data=data, layout=layout)
 fig2.update_layout(xaxis_title="Number of listings")
 pyo.plot(fig2)
 
+#---------------------------------- PIE CHART (RATING) -----------------------------------------------------------------
 
 fig3 = go.Figure()
 fig3.add_trace(go.Pie(labels=df['ordinal_rating'].value_counts().index, values=df['ordinal_rating'].value_counts().values))
