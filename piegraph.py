@@ -36,7 +36,7 @@ fig.update_layout(xaxis_title='Price ($)', yaxis_title='Relative frequencies', s
 pyo.plot(fig)
 
 
-fig = go.Figure()
-fig.add_trace(go.Pie(labels=df['ordinal_rating'].value_counts().index, values=df['ordinal_rating'].value_counts().values))
-fig.update_layout(title="Proportion of listing's rating")
-pyo.plot(fig)
+fig3 = go.Figure()
+fig3.add_trace(go.Pie(labels=df['ordinal_rating'].value_counts().index, values=df['ordinal_rating'].value_counts().values))
+fig3.update_layout(title="Proportion of listing's rating")
+pyo.plot(fig3)
