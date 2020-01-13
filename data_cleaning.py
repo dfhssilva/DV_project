@@ -1,6 +1,8 @@
 # imports
 import zipfile as zp
 import pandas as pd
+from datetime import datetime
+
 
 
 def get_files_zip():
@@ -44,5 +46,109 @@ df4 = prop_df.loc[:, ["property_id", "neighbourhood_cleansed", "neighbourhood_gr
 
 abt_df = df1.merge(df3, how="left", on="host_id").merge(df4, how="left", on="property_id")
 
+
+
+# Drop columns not needed
+abt_df = abt_df.drop(columns = ["listing_id","square_feet","review_scores_accuracy","review_scores_cleanliness",
+                                "review_scores_checkin","review_scores_communication","review_scores_value",
+                                "host_has_profile_pic", "host_identity_verified","neighbourhood_cleansed"])
+
+#Missing values treatment
+missings = abt_df.isnull().sum().reset_index()
+
+abt_df["cleaning_fee"] = abt_df["cleaning_fee"].fillna("$0")
+abt_df.dropna(subset = ["review_scores_location"], inplace = True)
+abt_df.dropna(subset = ["host_listings_count"], inplace = True)
+abt_df["host_since"] = abt_df["host_since"].fillna("10/23/2012") #fill with mode
+abt_df["host_response_rate"] = abt_df["host_response_rate"].fillna("0%")
+abt_df["host_response_time"] = abt_df["host_response_time"].fillna("a few days or more")
+abt_df["host_is_superhost"] = abt_df["host_is_superhost"].fillna("f") #fill with mode
+
+#Transform Variables
+
+abt_df['price'] = abt_df['price'].str.strip("$")
+abt_df['price'] = abt_df['price'].str.replace(",",'')
+abt_df['price'] = abt_df['price'].str.strip(" ")
+abt_df["cleaning_fee"] = abt_df["cleaning_fee"].str.strip("$")
+
+abt_df['host_since'] = abt_df['host_since'].str.strip(" ")
+
+#Change datatypes
+abt_df['price'] = abt_df['price'].astype(float)
+abt_df["cleaning_fee"] = abt_df["cleaning_fee"].astype(float)
+
+abt_df["host_since"] = pd.to_datetime(abt_df["host_since"], format = "%m/%d/%Y") #passar a date
+
+abt_df.loc[abt_df["host_is_superhost"] == 't', "host_is_superhost"]=1 #passar a binária
+abt_df.loc[abt_df["host_is_superhost"] == 'f', "host_is_superhost"]=0
+
+#Correções nas variaveis
+abt_df['amenities'] = abt_df['amenities'].str.strip("{")
+abt_df['amenities'] = abt_df['amenities'].str.strip("}")
+abt_df['amenities'] = abt_df['amenities'].str.replace('"','')
+
+abt_df["amenities"] = abt_df["amenities"].str.split(",")
+
+abt_df.loc[abt_df["neighbourhood_group_cleansed"] == 'Lourinh', "neighbourhood_group_cleansed"]="Lourinhã"
+
+
+#Create dummy variables
+wifi = []
+TV = []
+Pets = []
+Parking = []
+Smoking = []
+
+for i in abt_df["amenities"]:
+    if "Wifi" in i:
+        wifi.append(1)
+    else:
+        wifi.append(0)
+for i in abt_df["amenities"]:
+    if "TV" in i:
+        TV.append(1)
+    else:
+        TV.append(0)
+for i in abt_df["amenities"]:
+    if "Pets allowed" in i:
+        Pets.append(1)
+    else:
+        Pets.append(0)
+for i in abt_df["amenities"]:
+    if "Smoking allowed" in i:
+        Smoking.append(1)
+    else:
+        Smoking.append(0)
+for i in abt_df["amenities"]:
+    if "Free parking on premises" in i:
+        Parking.append(1)
+    else:
+        Parking.append(0)
+
+abt_df["Wifi"] = wifi
+abt_df["TV"] = TV
+abt_df["Smoking"] = Smoking
+abt_df["Park"] = Parking
+abt_df["Pets"] = Pets
+
+abt_df = abt_df.drop(columns = ["amenities"])
+
+#list = ["Smoking allowed", "Pets allowed"]
+#for i in list:
+#    abt_df[i] = 0
+#   abt_df.loc[i in abt_df["amenities"], i] = 1
+
+#Create new variables
+
+abt_df["price"] = abt_df["price"] + abt_df["cleaning_fee"]
+
+abt_df["host_since"] = abt_df["host_since"].dt.year
+abt_df["Years_host"] = 2020-abt_df["host_since"]
+
+#Save the final df
+
+abt_df.to_csv(r'.\data\final_df.csv', index=False)
+
+#abt_df.columns
 
 
