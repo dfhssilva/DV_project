@@ -37,6 +37,7 @@ df2 = calend_df.loc[:, ["listing_id", "date", "available", "price"]]
 
 df3 = host_df.loc[:, ["host_id", "host_since", "host_response_time", "host_response_rate", "host_is_superhost",
                       "host_listings_count", "host_has_profile_pic", "host_identity_verified"]]
+
 df3.drop_duplicates(inplace=True)
 
 df4 = prop_df.loc[:, ["property_id", "neighbourhood_cleansed", "neighbourhood_group_cleansed", "latitude", "longitude",
@@ -44,5 +45,11 @@ df4 = prop_df.loc[:, ["property_id", "neighbourhood_cleansed", "neighbourhood_gr
 
 abt_df = df1.merge(df3, how="left", on="host_id").merge(df4, how="left", on="property_id")
 
+lis = ['wifi', 'TV', ]
+
+for i in list:
+    abt[i] = 0
+    abt.loc[(i in abt['aminities']), i] = 1
 
 
+abt_df.to_excel(r'C:\Users\r2016728\Documents\GitHub\DV_project\final.xlsx')
