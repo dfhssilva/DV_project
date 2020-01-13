@@ -147,7 +147,7 @@ abt_df["Years_host"] = 2020-abt_df["host_since"]
 
 #Save the final df
 
-abt_df.to_excel(r'C:\Users\ricar\Documents\IMS\Mestrado\Data Visualization\Projeto\final_df.xlsx')
+abt_df.to_csv(r'.\data\final_df.csv', index=False)
 
 #abt_df.columns
 
