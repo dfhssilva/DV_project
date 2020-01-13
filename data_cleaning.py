@@ -33,7 +33,7 @@ df1 = list_df.loc[:, ["listing_id", "host_id", "property_id", "room_type", "amen
                       "cleaning_fee", "availability_next_30", "availability_next_60", "availability_next_90",
                       "reviews_per_month", "review_scores_rating", "review_scores_accuracy",
                       "review_scores_cleanliness", "review_scores_checkin", "review_scores_communication",
-                      "review_scores_location", "review_scores_value", "cancellation_policy"]]
+                      "review_scores_location", "review_scores_value", "cancellation_policy", "listing_url"]]
 
 df2 = calend_df.loc[:, ["listing_id", "date", "available", "price"]]
 
