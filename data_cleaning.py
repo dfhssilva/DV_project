@@ -81,6 +81,8 @@ abt_df["host_since"] = pd.to_datetime(abt_df["host_since"], format = "%m/%d/%Y")
 
 abt_df.loc[abt_df["host_is_superhost"] == 't', "host_is_superhost"]=1 #passar a binária
 abt_df.loc[abt_df["host_is_superhost"] == 'f', "host_is_superhost"]=0
+abt_df['demand_per_month'] = abt_df.reviews_per_month.astype(int)
+
 
 #Correções nas variaveis
 abt_df['amenities'] = abt_df['amenities'].str.strip("{")
@@ -92,58 +94,29 @@ abt_df["amenities"] = abt_df["amenities"].str.split(",")
 abt_df.loc[abt_df["neighbourhood_group_cleansed"] == 'Lourinh', "neighbourhood_group_cleansed"]="Lourinhã"
 
 
-#Create dummy variables
-wifi = []
-TV = []
-Pets = []
-Parking = []
-Smoking = []
-
-for i in abt_df["amenities"]:
-    if "Wifi" in i:
-        wifi.append(1)
-    else:
-        wifi.append(0)
-for i in abt_df["amenities"]:
-    if "TV" in i:
-        TV.append(1)
-    else:
-        TV.append(0)
-for i in abt_df["amenities"]:
-    if "Pets allowed" in i:
-        Pets.append(1)
-    else:
-        Pets.append(0)
-for i in abt_df["amenities"]:
-    if "Smoking allowed" in i:
-        Smoking.append(1)
-    else:
-        Smoking.append(0)
-for i in abt_df["amenities"]:
-    if "Free parking on premises" in i:
-        Parking.append(1)
-    else:
-        Parking.append(0)
-
-abt_df["Wifi"] = wifi
-abt_df["TV"] = TV
-abt_df["Smoking"] = Smoking
-abt_df["Park"] = Parking
-abt_df["Pets"] = Pets
-
-abt_df = abt_df.drop(columns = ["amenities"])
-
-#list = ["Smoking allowed", "Pets allowed"]
-#for i in list:
-#    abt_df[i] = 0
-#   abt_df.loc[i in abt_df["amenities"], i] = 1
-
 #Create new variables
 
-abt_df["price"] = abt_df["price"] + abt_df["cleaning_fee"]
+abt_df["price"] = abt_df["price"] + abt_df["cleaning_fee"] # price total
+
+abt_df['ordinal_rating'] = '5 Stars'
+abt_df.loc[abt_df['review_scores_rating']<=80,'ordinal_rating'] = '1 Star'
+abt_df.loc[(abt_df['review_scores_rating']>80) & (abt_df['review_scores_rating']<=90),'ordinal_rating'] = '2 Stars'
+abt_df.loc[(abt_df['review_scores_rating']>90) & (abt_df['review_scores_rating']<=95),'ordinal_rating'] = '3 Stars'
+abt_df.loc[(abt_df['review_scores_rating']>95) & (abt_df['review_scores_rating']<100),'ordinal_rating'] = '4 Stars' # ordinal rating
+
+abt_df['available'] = 'Red'
+abt_df.loc[abt_df['availability_next_30']>7,'available'] = 'Green'
+abt_df.loc[(abt_df['availability_next_30']>0) & (abt_df['availability_next_30']<=7),'available'] = 'Yellow' # ordinal availability next 30 days
 
 abt_df["host_since"] = abt_df["host_since"].dt.year
-abt_df["Years_host"] = 2020-abt_df["host_since"]
+abt_df["Years_host"] = 2020-abt_df["host_since"] # years as host
+
+pref_amenities = ["Wifi","TV","Smoking allowed","Free parking on premises","Pets allowed"]
+abt_df ['pref_amenities'] = abt_df['amenities'].apply(lambda x: [i for i in x if i in pref_amenities]) # aminities prefered
+
+# Drop unused columns
+abt_df = abt_df.drop(['availability_next_60','availability_next_90', 'amenities', 'cleaning_fee','reviews_per_month',
+                      'host_since', 'host_response_rate', 'host_listings_count'], axis = 1)
 
 #Save the final df
 
