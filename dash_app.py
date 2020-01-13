@@ -36,3 +36,4 @@ layout = go.Layout(
 
 fig = go.Figure(data=data, layout=layout)  # Figure is composed by data(what you show) and layout(how you show)
 pyo.plot(fig)
+
