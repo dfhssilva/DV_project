@@ -23,17 +23,17 @@ df = pd.read_csv("./data/final_df.csv")
 hist_data = [df['price']]
 group_labels = ['distplot']
 f = ff.create_distplot(hist_data, group_labels, bin_size=5, show_rug=False)
-fig = go.Figure(f)
-fig.data[0].marker.line = dict(color='black', width=2)
-fig.data[1].line.color = 'red'
-fig.layout.sliders = [dict(
+fig1 = go.Figure(f)
+fig1.data[0].marker.line = dict(color='black', width=2)
+fig1.data[1].line.color = 'red'
+fig1.layout.sliders = [dict(
                 active=4,
                 currentvalue={"prefix": "bin size: "},
                 pad={"t": 20},
                 steps=[dict(label=i, method='restyle',  args=['xbins.size', i]) for i in range(1, 20)]
                 )]
-fig.update_layout(xaxis_title='Price ($)', yaxis_title='Relative frequencies', showlegend=False, title='Price distribution')
-pyo.plot(fig)
+fig1.update_layout(xaxis_title='Price ($)', yaxis_title='Relative frequencies', showlegend=False, title='Price distribution')
+pyo.plot(fig1)
 
 
 data = [go.Bar(
