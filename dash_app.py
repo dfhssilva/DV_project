@@ -1,10 +1,7 @@
 # imports
-<<<<<<< HEAD
 import zipfile as zp
 from typing import Type
 
-=======
->>>>>>> 17e7b7ae0ac5255d0f2c41c0adca23b6f97bc203
 import pandas as pd
 import plotly.offline as pyo
 import plotly.figure_factory as ff
@@ -97,7 +94,6 @@ app = dash.Dash(__name__, assets_folder="./assets")
 
 # Add the following line before deployment
 # server = app.server
->>>>>>> 17e7b7ae0ac5255d0f2c41c0adca23b6f97bc203
 
 # ------------------------------------------------------- HTML ---------------------------------------------------------
 
@@ -224,10 +220,6 @@ def update_graph (sel_neig, sel_room, sel_rate, sel_price):
 
     df_sliced = slice_df(sel_neig, sel_room, sel_rate, sel_price)
 
-
-
-=======
-
 if __name__ == '__main__':
     app.run_server()
->>>>>>> 17e7b7ae0ac5255d0f2c41c0adca23b6f97bc203
+
