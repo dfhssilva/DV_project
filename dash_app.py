@@ -135,11 +135,11 @@ pyo.plot(fig1)
 
 #------------------------------------- BAR CHART (ROOM_TYPE) -----------------------------------------------------------
 data = [go.Bar(
-            x=df['room_type'].value_counts().values,
-            y=df['room_type'].value_counts().index,
-            orientation='h', marker=dict(color=['red', 'blue', 'green'])
+            x=df['ordinal_rating'].value_counts().values,
+            y=df['ordinal_rating'].value_counts().index,
+            orientation='h', marker=dict(color=['red', 'blue', 'green', 'yellow', 'orange'])
 )]
-layout = go.Layout(title=go.layout.Title(text='Room Type'))
+layout = go.Layout(title=go.layout.Title(text='Rating'))
 fig2 = go.Figure(data=data, layout=layout)
 fig2.update_layout(xaxis_title="Number of listings")
 pyo.plot(fig2)
@@ -147,6 +147,10 @@ pyo.plot(fig2)
 #---------------------------------- PIE CHART (RATING) -----------------------------------------------------------------
 
 fig3 = go.Figure()
-fig3.add_trace(go.Pie(labels=df['ordinal_rating'].value_counts().index, values=df['ordinal_rating'].value_counts().values))
-fig3.update_layout(title="Proportion of listing's rating")
+fig3.add_trace(go.Pie(labels=df['room_type'].value_counts().index, values=df['room_type'].value_counts().values))
+fig3['data'][0].update({'textinfo' : 'text+value+percent',
+                       'text' : df['room_type'].value_counts().index,
+                        'hoverinfo' : 'label',
+                      'showlegend' : False})
+fig3.update_layout(title="Proportion of room types")
 pyo.plot(fig3)
