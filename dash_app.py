@@ -89,38 +89,62 @@ app = dash.Dash(__name__, assets_folder="./assets")
 # server = app.server
 
 # ------------------------------------------------------- HTML ---------------------------------------------------------
-
-app.layout = html.Div([
-    html.Div([
-        html.Div([
-            html.H1('Airbnb Lisbon: a client focused application'),
-        ], id='html_title'),
-        html.Div([
-            html.Div([
-                dcc.Graph(figure=fig_map, id="dcc_map_graph")
-            ], id='html_map', className='eight columns'),
-            html.Div([
-                dcc.Dropdown(
-                    options=[{'label': i, 'value': i} for i in
-                             ["All"] + df["neighbourhood_group_cleansed"].unique().tolist()],
-                    value='All',
-                    style={'padding-left': 0},
-                    id='dcc_neighbourhood_dropdown'
+app.layout = html.Div(id="app-body", className="app-body", children=[
+    html.Div(id="app-control-tabs", className="control-tabs", children=[
+        dcc.Tabs(id="app-tabs", value="what-is", children=[
+            dcc.Tab(
+                label="About",
+                value="what-is",
+                children=html.Div(className="control-tab", children=[
+                    html.H4(className="what-is", children="What is Airbnb Lisbon Project?"),
+                    html.P("This is a text example"),
+                    html.P("Another one"),
+                    html.P("DJ Kaled"),
+                    html.Div([
+                        "Source: ",
+                        html.A("Inside Airbnb Website",
+                               href="http://insideairbnb.com/get-the-data.html")
+                        ]),
+                    html.Br()
+                    ])
                 ),
-                dcc.Dropdown(
-                    options=[{'label': i, 'value': j} for i, j in zip(
-                        ["Availability", "Superhost", "Property Type", "Cancellation Policy"],
-                        ["availability_next_30", "host_is_superhost", "property_type", "cancellation_policy"])],
-                    value='availability_next_30',
-                    id='dcc_variable_dropdown'
-                ),
-                dcc.Graph(figure=fig_pie, id="dcc_pie_graph"),
-                dcc.Graph(figure=fig_bar, id="dcc_bar_graph"),
-                dcc.Graph(figure=fig_hist, id="dcc_hist_graph")
-            ], id="html_non_map", className="four columns")
-        ], id="html_row", className="row")
+            dcc.Tab(
+                label="Graphs",
+                value="graphs"
+            )
+        ])
+    ]),
+    html.Div(id='html_map', className="circos-display-none", children=[
+        dcc.Graph(figure=fig_map, id="dcc_map_graph")
     ])
 ])
+#             html.Div([
+#                 html.Div([
+#                     dcc.Dropdown(
+#                     options=[{'label': i, 'value': i} for i in
+#                              ["All"] + df["neighbourhood_group_cleansed"].unique().tolist()],
+#                     value='All',
+#                     # placeholder="Select a municipality",
+#                     id='dcc_neighbourhood_dropdown'
+#                     ),
+#                     dcc.Dropdown(
+#                         options=[{'label': i, 'value': j} for i, j in zip(
+#                             ["Availability", "Superhost", "Property Type", "Cancellation Policy"],
+#                             ["availability_next_30", "host_is_superhost", "property_type", "cancellation_policy"])],
+#                         value='availability_next_30',
+#                         # placeholder="Select a variable",
+#                         id='dcc_variable_dropdown'
+#                     )
+#                 ]),
+#                 html.Div([
+#                     dcc.Graph(figure=fig_pie, id="dcc_pie_graph"),
+#                     dcc.Graph(figure=fig_bar, id="dcc_bar_graph"),
+#                     dcc.Graph(figure=fig_hist, id="dcc_hist_graph")
+#                 ], className='control-tab')
+#             ], id="html_non_map", className="four columns")
+#         ], id="html_subsection")
+#     ])
+# ])
 
 # --------------------------------------------------- CALLBACKS --------------------------------------------------------
 rates = list(df.ordinal_rating.unique())
