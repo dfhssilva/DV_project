@@ -34,9 +34,9 @@ app.layout = html.Div([
             dcc.Dropdown(
                 id='variable-dropdown',
                 options=[{'label': i, 'value': j} for i, j in zip(
-                    ["Availability", "Superhost", "Property Type", "Cancellation Policy"],
-                    ["availability_next_30", "host_is_superhost", "property_type", "cancellation_policy"])],
-                value='availability_next_30'
+                    ["Superhost", "Availability", "Cancellation Policy"],
+                    ["host_is_superhost", "available","cancellation_policy"])],
+                value='host_is_superhost'
             )
         ], style=dict(width='50%', display='inline-block')
         ),
@@ -65,6 +65,22 @@ list_of_neighbourhoods= {
     "Lisboa":{"lat": 38.7223 , "lon": -9.1393, "zoom": 11},
     "Azambuja":{"lat": 39.0696 , "lon": -8.8693, "zoom": 11},
 }
+# Define a new df with the colors
+
+df_colors = df[["property_id","host_is_superhost","cancellation_policy","available"]].set_index("property_id")
+df_colors.columns = ["superhost","cancellation","availability"]
+
+#Superhost colors
+df_colors["superhost_colors"] = "red"
+df_colors.loc[df_colors["superhost"] == 1, "superhost_colors"] = "green" #verde
+#Cancellation colors
+df_colors["cancellation_colors"]= "red" #vermelho strict
+df_colors.loc[df_colors["cancellation"] == "flexible", "cancellation_colors"] = "green"
+df_colors.loc[df_colors["cancellation"] == "moderate", "cancellation_colors"] = "yellow"
+#Availability colors
+df_colors["availability_colors"] = "red" #low
+df_colors.loc[df_colors["availability"] == "Medium", "availability_colors"] = "yellow"
+df_colors.loc[df_colors["availability"] == "High", "availability_colors"] = "green"
 
 @app.callback(
     Output("map-graph", "figure"),
@@ -73,19 +89,20 @@ list_of_neighbourhoods= {
         Input("variable-dropdown", "value")
     ],
 )
-def update_graph(selectedlocation, selectedVariable):
+def update_graph(selectedlocation, selectedvariable):
     latInitial = 39
     lonInitial = -9.2
     bearing = 0
 
-    if selectedlocation:
+    if selectedlocation: #Pass the parameters for the neighbourhoods
         latInitial = list_of_neighbourhoods[selectedlocation]["lat"]
         lonInitial = list_of_neighbourhoods[selectedlocation]["lon"]
         zoomInitial = list_of_neighbourhoods[selectedlocation]["zoom"]
-    return go.Figure(
+        return go.Figure(
     # Data
         data = [
             go.Scattermapbox(
+                ids=df["property_id"],
                 lat=df["latitude"],
                 lon=df["longitude"],
                 mode="markers"
@@ -112,8 +129,94 @@ def update_graph(selectedlocation, selectedVariable):
                 )
         )
     )
-if __name__ == '__main__':
+    # Dropdown for the variables
+
+    if selectedvariable == "host_is_superhost":
+        return go.Figure(
+        # Data
+            data = [
+                go.Scattermapbox(
+                    ids=df["property_id"],
+                    lat=df["latitude"],
+                    lon=df["longitude"],
+                    mode="markers",
+                    marker = dict(
+                            color= df_colors["superhost_colors"]
+                    ),
+                ),
+            ],
+        # Layout
+            layout = go.Layout(
+                    autosize=True,
+                    margin=go.layout.Margin(l=0, r=35, t=0, b=0),
+                    showlegend=False,
+                    mapbox=dict(
+                        accesstoken="pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ",
+                        style="dark",
+                        center = {'lat': latInitial, 'lon': lonInitial},
+                        zoom = 8.5,
+                    )
+            )
+        )
+    if selectedvariable == "cancellation_policy":
+        return go.Figure(
+            # Data
+            data=[
+                go.Scattermapbox(
+                    ids=df["property_id"],
+                    lat=df["latitude"],
+                    lon=df["longitude"],
+                    mode="markers",
+                    marker=dict(
+                        color=df_colors["cancellation_colors"]
+                    ),
+                ),
+            ],
+            # Layout
+            layout=go.Layout(
+                autosize=True,
+                margin=go.layout.Margin(l=0, r=35, t=0, b=0),
+                showlegend=False,
+                mapbox=dict(
+                    accesstoken="pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ",
+                    style="dark",
+                    center={'lat': latInitial, 'lon': lonInitial},
+                    zoom=8.5,
+                )
+            )
+        )
+
+    if selectedvariable == "available":
+        return go.Figure(
+            # Data
+            data=[
+                go.Scattermapbox(
+                    ids=df["property_id"],
+                    lat=df["latitude"],
+                    lon=df["longitude"],
+                    mode="markers",
+                    marker=dict(
+                        color=df_colors["availability_colors"]
+                    ),
+                ),
+            ],
+            # Layout
+            layout=go.Layout(
+                autosize=True,
+                margin=go.layout.Margin(l=0, r=35, t=0, b=0),
+                showlegend=False,
+                mapbox=dict(
+                    accesstoken="pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ",
+                    style="dark",
+                    center={'lat': latInitial, 'lon': lonInitial},
+                    zoom=8.5,
+                )
+            )
+)
+if __name__ ==  '__main__':
     app.run_server()
+
+
 
 
 #--------------------------------- PRICE HISTOGRAM ---------------------------------------------------------------------
@@ -150,3 +253,4 @@ fig3 = go.Figure()
 fig3.add_trace(go.Pie(labels=df['ordinal_rating'].value_counts().index, values=df['ordinal_rating'].value_counts().values))
 fig3.update_layout(title="Proportion of listing's rating")
 pyo.plot(fig3)
+
