@@ -1,5 +1,7 @@
 # imports
 import zipfile as zp
+from typing import Type
+
 import pandas as pd
 import json
 import plotly.offline as pyo
@@ -13,7 +15,31 @@ from dash.dependencies import Input, Output
 # ------------------------------------------------- IMPORTING DATA -----------------------------------------------------
 
 # Reading Airbnb df
+from pandas import DataFrame
+
 df = pd.read_csv("./data/final_df.csv")
+
+# -------------------------- Slice df Function for Graphs ------------------------------------------
+rates = list(df.ordinal_rating.unique())
+neig = list(df.neighbourhood_group_cleansed.unique())
+price = [[df.price.min(), df.price.max()]]
+room = list(df.room_type.unique())
+
+
+def slice_df(neig=neig, rates=rates, price=price, room=room):
+    aux = df.copy()
+    # slice neighbourhood
+    aux = aux.loc[aux['neighbourhood_group_cleansed'].isin(neig)]
+    # slice rating
+    aux = aux.loc[aux['ordinal_rating'].isin(rates)]
+    # slice room type
+    aux = aux.loc[aux['room_type'].isin(room)]
+    # slice price
+    aux = aux.loc[(aux['price'] > price[0]) & (aux['price'] < price[-1])]
+
+    return aux
+# -------------------------------------------------------------------------------------------------
+
 
 # # Reading GeoJSON
 # with zp.ZipFile("./data/airbnb_data.zip") as myzip:
@@ -116,6 +142,14 @@ if __name__ == '__main__':
     app.run_server()
 
 
+
+
+
+
+
+
+
+
 #--------------------------------- PRICE HISTOGRAM ---------------------------------------------------------------------
 
 hist_data = [df['price']]
@@ -150,3 +184,12 @@ fig3 = go.Figure()
 fig3.add_trace(go.Pie(labels=df['ordinal_rating'].value_counts().index, values=df['ordinal_rating'].value_counts().values))
 fig3.update_layout(title="Proportion of listing's rating")
 pyo.plot(fig3)
+
+
+
+
+
+
+
+
+
