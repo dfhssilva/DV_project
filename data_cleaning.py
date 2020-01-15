@@ -104,9 +104,17 @@ abt_df.loc[(abt_df['review_scores_rating']>80) & (abt_df['review_scores_rating']
 abt_df.loc[(abt_df['review_scores_rating']>90) & (abt_df['review_scores_rating']<=95),'ordinal_rating'] = '3 Stars'
 abt_df.loc[(abt_df['review_scores_rating']>95) & (abt_df['review_scores_rating']<100),'ordinal_rating'] = '4 Stars' # ordinal rating
 
-abt_df['available'] = 'Red'
-abt_df.loc[abt_df['availability_next_30']>7,'available'] = 'Green'
-abt_df.loc[(abt_df['availability_next_30']>0) & (abt_df['availability_next_30']<=7),'available'] = 'Yellow' # ordinal availability next 30 days
+abt_df['available'] = 'Low'
+abt_df.loc[abt_df['availability_next_30']>7,'available'] = 'High'
+abt_df.loc[(abt_df['availability_next_30']>0) & (abt_df['availability_next_30']<=7),'available'] = 'Medium' # ordinal availability next 30 days
+
+
+abt_df.loc[abt_df["cancellation_policy"] == "strict_14_with_grace_period", "cancellation_policy" ]= "strict"  #join variable categories into strict
+abt_df.loc[abt_df["cancellation_policy"] == "super_strict_60", "cancellation_policy"] = "strict"
+abt_df.loc[abt_df["cancellation_policy"] == "super_strict_30", "cancellation_policy"]= "strict"
+
+
+
 
 abt_df["host_since"] = abt_df["host_since"].dt.year
 abt_df["Years_host"] = 2020-abt_df["host_since"] # years as host
