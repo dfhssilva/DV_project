@@ -418,7 +418,7 @@ def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
         layout=go.Layout(
             autosize=True,
             margin=go.layout.Margin(l=0, r=35, t=0, b=0),
-            showlegend=False,
+            showlegend=True,
             mapbox=dict(
                 accesstoken=mapbox_access_token,
                 center={'lat': latInitial, 'lon': lonInitial},
