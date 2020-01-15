@@ -17,8 +17,6 @@ mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3
 # ------------------------------------------------- IMPORTING DATA -----------------------------------------------------
 
 # Reading Airbnb df
-from pandas import DataFrame
-
 df = pd.read_csv("./data/final_df.csv")
 
 # ----------------------------------------------------- FIGURES --------------------------------------------------------
@@ -32,7 +30,7 @@ def plots_actualize(df2):
             lon=df2["longitude"],
             mode="markers",
             marker=dict(
-                color="blue")),
+                color="#5A6FF9")),
         layout=go.Layout(
             autosize=True,
             margin=go.layout.Margin(l=0, r=0, t=0, b=0),
@@ -46,7 +44,7 @@ def plots_actualize(df2):
         )
     )
 
-    pie_colors = ["#424bf5", "#4296f5", "#42ddf5"]
+    pie_colors = ["#5A6FF9", "#4296f5", "#42ddf5"]
     unique_rooms = list(df2.room_type.unique())
     if len(unique_rooms) == 1:
         if unique_rooms[0] == 'Private room':
@@ -67,14 +65,18 @@ def plots_actualize(df2):
             ),
             marker=(
                 dict(
-                    colors=pie_colors
+                    colors=pie_colors,
+                    line=dict(
+                        color="white",
+                        width=0.5
+                    )
                 )
             )
         ),
         layout=go.Layout(
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            margin=go.layout.Margin(l=0, r=0, t=70, b=0),
+            margin=go.layout.Margin(l=0, r=0, t=0, b=0),
         )
     )
 
@@ -92,11 +94,12 @@ def plots_actualize(df2):
         layout=go.Layout(
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            margin=go.layout.Margin(l=0, r=0, t=70, b=0),
+            margin=go.layout.Margin(l=0, r=0, t=0, b=0),
             clickmode='event+select',
             font=dict(
                 color="white"
-            )
+            ),
+            xaxis_title='Number of Listings',
         )
     )
 
@@ -136,7 +139,7 @@ fig_map, fig_pie, fig_bar, fig_hist = plots_actualize(df)
 # ------------------------------------------------------- APP ----------------------------------------------------------
 app = dash.Dash(__name__)
 # Deployment
-# server = app.server
+server = app.server
 
 # ------------------------------------------------------- HTML
 # Layout of Dash App
@@ -170,9 +173,9 @@ app.layout = html.Div(
                     id="div-header-2",
                     className="four columns div-user-controls",
                     children=[
-                        """The following application describes the Airbnb listings of Lisbon.
+                        html.P("""The following application describes the Airbnb listings of Lisbon.
                         This dashboard is fully interactive and can be used to choose the ideal place to stay in Lisbon.
-                         """
+                         """, style={"padding": "30px 0"})
                     ]  # TODO: Escrever melhor descrição
                 ),
                 html.Div(
@@ -254,13 +257,15 @@ app.layout = html.Div(
                                             className="row",
                                             children=[
                                                 html.P('Proportion of Room Type',
-                                                       className="seven columns plot_title"),
-                                                html.Button(children="Reset",
-                                                            id='button_pie',
-                                                            className="five columns"),
+                                                       className="eight columns plot_title"),
+                                                html.Button(
+                                                    id='button_pie',
+                                                    children=["Reset"],
+                                                    className="four columns"
+                                                ),
                                             ]
                                         ),
-                                        dcc.Graph(figure=fig_pie, id="dcc_pie_graph", style={"max-height": "400px"}),
+                                        dcc.Graph(figure=fig_pie, id="dcc_pie_graph", style={"max-height": "350px"}),
                                     ]
                                 ),
                                 html.Div(
@@ -271,15 +276,18 @@ app.layout = html.Div(
                                             className="row",
                                             children=[
                                                 html.P("Listing Rating Frequency",
-                                                       className="seven columns plot_title"
-                                                ),
-                                                html.Button(children="Reset",
-                                                            id='button_bar',
-                                                            className="five columns"
-                                                ),
+                                                       className="eight columns plot_title"),
+                                                html.Button(
+                                                    id="button_bar",
+                                                    children="Reset",
+                                                    className="four columns"),
                                             ]
                                         ),
-                                        dcc.Graph(figure=fig_bar, id="dcc_bar_graph", style={"max-height": "400px"}),
+                                        dcc.Graph(
+                                            figure=fig_bar,
+                                            id="dcc_bar_graph",
+                                            style={"max-height": "350px", "max-width": "300px", "margin-top": "40px"}
+                                        ),
                                     ]
                                 ),
                                 html.Div(
@@ -290,19 +298,35 @@ app.layout = html.Div(
                                             className="row",
                                             children=[
                                                 html.P("Price Distribution",
-                                                       className="seven columns plot_title"),
+                                                       className="eight columns plot_title"),
                                                 html.Button(children="Reset",
-                                                            className="five columns"),
+                                                            className="four columns"),
                                             ]
                                         ),
-                                        html.Div(dcc.Input(id='input-min-price',
-                                                           placeholder='Enter minimum price',
-                                                           type='text')),
-                                        html.Div(dcc.Input(id='input-max-price',
-                                                           placeholder='Enter maximum price',
-                                                           type='text')),
-                                        html.Button('Submit', id='button_price'),
-                                        dcc.Graph(figure=fig_hist, id="dcc_hist_graph", style={"max-height": "400px"}),
+                                        html.Div(
+                                            className="row",
+                                            style={"margin-top": "20px"},
+                                            children=[
+                                                dcc.Input(
+                                                    id='input-min-price',
+                                                    className="four columns css_button",
+                                                    placeholder='Minimum price',
+                                                    type='text'
+                                                ),
+                                                dcc.Input(
+                                                    id='input-max-price',
+                                                    className="four columns css_button",
+                                                    placeholder='Maximum price',
+                                                    type='text'
+                                                ),
+                                                html.Button('Filter', id='button_price', className="four columns")
+                                            ]
+                                        ),
+                                        dcc.Graph(
+                                            figure=fig_hist,
+                                            id="dcc_hist_graph",
+                                            style={"max-height": "300px", "margin-top": "40px"}
+                                        ),
                                     ]
                                 )
                             ]
@@ -384,30 +408,6 @@ df_colors["availability_colors"] = "red" #low
 df_colors.loc[df_colors["availability"] == "Medium", "availability_colors"] = "yellow"
 df_colors.loc[df_colors["availability"] == "High", "availability_colors"] = "green"
 
-
-
-# def check_click(button_b, button_p):
-#     global bar_click, pie_click
-#
-#     check_b = False
-#     check_p = False
-#
-#     if button_b is None:
-#         button_b = 0
-#     if button_b != bar_click:
-#         bar_click += 1
-#         check_b = True
-#
-#     if button_p is None:
-#         button_p = 0
-#     if button_p != pie_click:
-#         pie_click += 1
-#         check_p = True
-#
-#     return (check_b, check_p)
-
-
-
 def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
     return go.Figure(
         data=[
@@ -469,7 +469,7 @@ def update_map(selectedlocation, selectedvariable):
     elif selectedvariable == "availability_next_30":
        return graph_params(df,list_params[0], list_params[1], list_params[2], df_colors["availability_colors"],df_colors["availability"])
     else:
-        return graph_params(df, list_params[0], list_params[1], list_params[2], "blue", "Listing")
+        return graph_params(df, list_params[0], list_params[1], list_params[2], "#5A6FF9", "Listing")
 
 
 @app.callback([
