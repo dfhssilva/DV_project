@@ -472,7 +472,7 @@ def update_perc_listings(neighbpicked):
 
 def update_graph(sel_neig, selected_pie, selected_bar, button, min_price, max_price):
 
-    if sel_neig!="All":
+    if sel_neig and sel_neig!="All":
         selected_neig = []
         selected_neig.append(sel_neig)
     else:
@@ -484,7 +484,7 @@ def update_graph(sel_neig, selected_pie, selected_bar, button, min_price, max_pr
     else:
         selected_pie_unique = room
 
-    if len(selected_bar['points']) != 0:
+    if selected_bar:
         selected_bar_unique = list(np.intersect1d(rates, [b['y'] for b in selected_bar['points']]))
     else:
         selected_bar_unique = rates

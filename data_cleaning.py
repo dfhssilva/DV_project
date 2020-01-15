@@ -128,7 +128,7 @@ abt_df = abt_df.drop(['availability_next_60','availability_next_90', 'amenities'
 
 #Save the final df
 
-abt_df.to_csv(r'.\data\final_df.csv', index=False)
+abt_df.to_csv('./data/final_df.csv', index=False)
 
 #abt_df.columns
 
