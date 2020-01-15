@@ -208,5 +208,35 @@ a {
 .scrollcol{
   position: relative;
   overflow-y: scroll;
-  max-height: 500px;
+  max-height: 450px;
 }
+
+.pretty_container {
+  border-radius: 5px;
+  background-color: #262626;
+  margin: 10px;
+  padding: 15px;
+  position: relative;
+}
+
+.pretty_container_sub {
+  border-radius: 5px;
+  background-color: #333333;
+  margin: 10px;
+  padding: 14px;
+  position: relative;
+}
+
+.plot_title {
+  font-family: "Open Sans";
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.universal_container {
+    position: relative;
+    width: 100%;
+    /* max-width: 2000; */
+    /* margin-left: 20px; */
+    /* box-sizing: border-box; */
+  }

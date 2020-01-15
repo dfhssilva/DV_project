@@ -22,8 +22,8 @@ from pandas import DataFrame
 df = pd.read_csv("./data/final_df.csv")
 
 # ----------------------------------------------------- FIGURES --------------------------------------------------------
-# TODO: Change font color in each figure for white
 # TODO: Change pad between figures
+# TODO: Change file name to app.py
 
 fig_map = go.Figure(
     data=go.Scattermapbox(
@@ -50,54 +50,67 @@ fig_pie = go.Figure(
         textinfo='text+value+percent',
         text=df['room_type'].value_counts().index,
         hoverinfo='label',
-        showlegend=False),
+        showlegend=False,
+        textfont=dict(
+            color="white"
+        )
+    ),
     layout=go.Layout(
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         margin=go.layout.Margin(l=0, r=0, t=70, b=0),
-        title='Proportion of Room Type')
+    )
 )
 
 fig_bar = go.Figure(
     data=go.Bar(
         x=df['ordinal_rating'].value_counts().values,
         y=df['ordinal_rating'].value_counts().index,
-        orientation='h'),
+        orientation='h',
+        marker=dict(
+            line=dict(
+                color="white"
+            )
+        )
+    ),
     layout=go.Layout(
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         margin=go.layout.Margin(l=0, r=0, t=70, b=0),
-        title="Listing Rating Frequency")
-)
-
-fig_hist = go.Figure(
-    data=ff.create_distplot(
-        [df['price']],
-        ['distplot'],
-        bin_size=30,
-        show_rug=False),
-    layout=go.Layout(
-        margin=go.layout.Margin(l=0, r=0, t=70, b=0),
-        title="Listing Rating Frequency",
-        sliders=[dict(active=4,
-                      currentvalue={"prefix": "bin size: "},
-                      pad={"t": 20},
-                      steps=[dict(label=i,
-                                  method='restyle',
-                                  args=['xbins.size', i]) for i in range(1, 20)]
-                      )
-                 ]
+        font=dict(
+            color="white"
+        ),
     )
 )
 
-fig_hist.data[0].marker.line = dict(color='black', width=2)
-fig_hist.data[1].line.color = 'red'
-fig_hist.update_layout(paper_bgcolor='rgba(0,0,0,0)',
-                       plot_bgcolor='rgba(0,0,0,0)',
-                       xaxis_title='Price ($)',
-                       yaxis_title='Relative frequencies',
-                       showlegend=False,
-                       title='Price distribution')
+fig_hist = go.Figure(
+    data=go.Histogram(
+        x=df['price'],
+        histnorm="",
+        xbins=dict(
+            size=30,
+            end=800
+        ),
+        marker=dict(
+            line=dict(
+                color="white",
+                width=0.25
+            )
+        )
+    ),
+    layout=go.Layout(
+        margin=go.layout.Margin(l=0, r=0, t=0, b=0),
+        clickmode='event+select',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        xaxis_title='Price (€)',
+        yaxis_title='Absolute frequencies',
+        showlegend=False,
+        font=dict(
+            color="white"
+        )
+    )
+)
 
 # ------------------------------------------------------- APP ----------------------------------------------------------
 app = dash.Dash(__name__)
@@ -184,10 +197,10 @@ app.layout = html.Div(
                     className="three columns div-user-controls",
                     children=[
                         "Percentage of listings: ",
-                        html.P(id="percentage-listings", style={"height": "35px", "font-size": "12"}),
+                        html.P(id="percentage-listings", style={"height": "50px", "font-size": 40}),
                         "Rank of location: ",
-                        html.P(id="rank-location", style={"height": "35px"}),
-                    ]  # TODO: Mudar aspeto deste output. Mudar tamanho de letra, etc.
+                        html.P(id="rank-location", style={"height": "50px", "font-size": 40}),
+                    ]  # TODO: Mudar aspeto deste output. Mudar tamanho de letra do hashtag, etc.
                 )
             ]
         ),
@@ -197,25 +210,78 @@ app.layout = html.Div(
                 html.Div(
                     # MAP
                     id="div-map-graph",
-                    className="eight columns",
+                    className="eight columns pretty_container",
                     children=[
+                        html.H3("Airbnb listings in Lisbon"),
                         dcc.Graph(figure=fig_map, id="dcc_map_graph")
-                    ]  # TODO: escala, titulo, norte, etc.
+                    ]
                 ),
                 html.Div(
-                    # GRAPHS
-                    id="div-other-graphs",
-                    className="four columns scrollcol bg-grey",
+                    id="div-side",
+                    className="four columns pretty_container",
                     children=[
-                        dcc.Graph(figure=fig_pie, id="dcc_pie_graph"),
-                        dcc.Graph(figure=fig_bar, id="dcc_bar_graph"),
-                        dcc.Graph(figure=fig_hist, id="dcc_hist_graph")
-                    ]  # TODO: meter scroll bar
+                        html.H3("About Airbnb in Lisbon"),
+                        html.Div(
+                            # GRAPHS
+                            id="div-other-graphs",
+                            className="scrollcol",
+                            children=[
+                                html.Div(
+                                    id="div-graph-1",
+                                    className="pretty_container_sub",
+                                    children=[
+                                        html.Div(
+                                            className="row",
+                                            children=[
+                                                html.P('Proportion of Room Type',
+                                                       className="seven columns plot_title"),
+                                                html.Button(children="Reset",
+                                                            className="five columns"),
+                                            ]
+                                        ),
+                                        dcc.Graph(figure=fig_pie, id="dcc_pie_graph", style={"max-height": "400px"}),
+                                    ]
+                                ),
+                                html.Div(
+                                    id="div-graph-2",
+                                    className="pretty_container_sub",
+                                    children=[
+                                        html.Div(
+                                            className="row",
+                                            children=[
+                                                html.P("Listing Rating Frequency",
+                                                       className="seven columns plot_title"),
+                                                html.Button(children="Reset",
+                                                            className="five columns"),
+                                            ]
+                                        ),
+                                        dcc.Graph(figure=fig_bar, id="dcc_bar_graph", style={"max-height": "400px"}),
+                                    ]
+                                ),
+                                html.Div(
+                                    id="div-graph-3",
+                                    className="pretty_container_sub",
+                                    children=[
+                                        html.Div(
+                                            className="row",
+                                            children=[
+                                                html.P("Price Distribution",
+                                                       className="seven columns plot_title"),
+                                                html.Button(children="Reset",
+                                                            className="five columns"),
+                                            ]
+                                        ),
+                                        dcc.Graph(figure=fig_hist, id="dcc_hist_graph", style={"max-height": "400px"}),
+                                    ]
+                                )
+                            ]
+                        )
+                    ]
                 )
             ]
         )
     ]
-)  # TODO: Fixar dashboard para nao rodar na vertical
+)
 
 # --------------------------------------------------- CALLBACKS
 # number of obs to calculate percent listings
@@ -312,9 +378,14 @@ def update_graph(selectedlocation, selectedvariable):
     ]
 )
 def update_perc_listings(neighbpicked):
-    return "Percentage of Listings: {:,d}".format(
-        df.loc[df["neighbourhood_group_cleansed"] == neighbpicked].shape[0] / nobs
-    )
+    if neighbpicked is None:
+        return ""
+    elif neighbpicked == "All":
+        return "100%"
+    else:
+        return "{0:.1f}%".format(
+            (df.loc[df["neighbourhood_group_cleansed"] == neighbpicked].shape[0] / nobs)*100
+        )
 
 # Update the rank of location according to neighbourhood
 @app.callback(
@@ -324,9 +395,12 @@ def update_perc_listings(neighbpicked):
     ]
 )
 def update_rank_municip(neighbpicked):
-    return "#{}".format(
-        location_ranking.index(neighbpicked)+1
-    )
+    if (neighbpicked is None) | (neighbpicked == "All"):
+        return ""
+    else:
+        return "#{}".format(
+            location_ranking.index(neighbpicked)+1
+        )
 
 
 if __name__ == '__main__':
