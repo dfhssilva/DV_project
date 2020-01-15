@@ -4,12 +4,12 @@ from typing import Type
 
 import pandas as pd
 import plotly.offline as pyo
-import plotly.figure_factory as ff
 import plotly.graph_objs as go
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
+import numpy as np
 
 # ------------------------------------------------- IMPORTING DATA -----------------------------------------------------
 
@@ -18,13 +18,15 @@ from pandas import DataFrame
 
 df = pd.read_csv("./data/final_df.csv")
 
-
+#global fig_map, fig_pie, fig_bar, fig_hist
 
 # ----------------------------------------------------- FIGURES --------------------------------------------------------
-fig_map = go.Figure(
+def plots_actualize(df2):
+
+    fig_map = go.Figure(
     data=go.Scattermapbox(
-        lat=df["latitude"],
-        lon=df["longitude"],
+        lat=df2["latitude"],
+        lon=df2["longitude"],
         mode="markers"),
     layout=go.Layout(
         autosize=True,
@@ -35,59 +37,61 @@ fig_map = go.Figure(
             style="dark",
             center={'lat': 39, 'lon': -9.2},
             zoom=8.5,
+            )
         )
     )
-)
 
-fig_pie = go.Figure(
-    data=go.Pie(
-        labels=df['room_type'].value_counts().index,
-        values=df['room_type'].value_counts().values,
-        textinfo='text+value+percent',
-        text=df['room_type'].value_counts().index,
-        hoverinfo='label',
-        showlegend=False),
-    layout=go.Layout(
-        margin=go.layout.Margin(l=0, r=0, t=70, b=0),
-        title='Proportion of Room Type')
-)
+    pie_colors = ["#424bf5", "#4296f5", "#42ddf5"]
+    unique_rooms = list(df2.room_type.unique())
+    if len(unique_rooms) == 1:
+        if unique_rooms[0] == 'Private room':
+            pie_colors = ["#4296f5"]
+        elif unique_rooms[0] == 'Shared room':
+            pie_colors = ["#42ddf5"]
 
-fig_bar = go.Figure(
-    data=go.Bar(
-        x=df['ordinal_rating'].value_counts().values,
-        y=df['ordinal_rating'].value_counts().index,
-        orientation='h'),
-    layout=go.Layout(
-        margin=go.layout.Margin(l=0, r=0, t=70, b=0),
-        title="Listing Rating Frequency")
-)
 
-fig_hist = go.Figure(
-    data=ff.create_distplot(
-        [df['price']],
-        ['distplot'],
-        bin_size=30,
-        show_rug=False),
-    layout=go.Layout(
-        margin=go.layout.Margin(l=0, r=0, t=70, b=0),
-        title="Listing Rating Frequency",
-        sliders=[dict(active=4,
-                      currentvalue={"prefix": "bin size: "},
-                      pad={"t": 20},
-                      steps=[dict(label=i,
-                                  method='restyle',
-                                  args=['xbins.size', i]) for i in range(1, 20)]
-                      )
-                 ]
-        )
-)
+    fig_pie = go.Figure(
+        data=go.Pie(
+            labels=df2['room_type'].value_counts().index,
+            values=df2['room_type'].value_counts().values,
+            textinfo='text+value+percent',
+            text=df2['room_type'].value_counts().index,
+            hoverinfo='label',
+            marker=dict(colors=pie_colors),
+            showlegend=False),
+        layout=go.Layout(
+            margin=go.layout.Margin(l=0, r=0, t=70, b=0),
+            title='Proportion of Room Type')
+    )
 
-fig_hist.data[0].marker.line = dict(color='black', width=2)
-fig_hist.data[1].line.color = 'red'
-fig_hist.update_layout(xaxis_title='Price ($)',
-                       yaxis_title='Relative frequencies',
-                       showlegend=False,
-                       title='Price distribution')
+    fig_bar = go.Figure(
+        data=go.Bar(
+            x=df2['ordinal_rating'].value_counts().values,
+            y=df2['ordinal_rating'].value_counts().index,
+            orientation='h'),
+        layout=go.Layout(
+            margin=go.layout.Margin(l=0, r=0, t=70, b=0),
+            title="Listing Rating Frequency",
+            clickmode='event+select')
+    )
+
+    fig_hist = go.Figure(
+        data=go.Histogram(
+            x=df2['price'],
+            histnorm=""),
+        layout=go.Layout(
+            margin=go.layout.Margin(l=0, r=0, t=70, b=0),
+            title="Listing Rating Frequency")
+    )
+    fig_hist.data[0].marker.line = dict(color='black', width=1)
+    fig_hist.update_layout(xaxis_title='Price ($)',
+                           yaxis_title='Listing frequencies',
+                           showlegend=False,
+                           title='Price distribution')
+
+    return (fig_map, fig_pie, fig_bar, fig_hist)
+
+fig_map, fig_pie, fig_bar, fig_hist = plots_actualize(df)
 
 # ------------------------------------------------------- APP ----------------------------------------------------------
 app = dash.Dash(__name__, assets_folder="./assets")
@@ -121,9 +125,14 @@ app.layout = html.Div([
                     value='availability_next_30',
                     id='dcc_variable_dropdown'
                 ),
-                dcc.Graph(figure=fig_pie, id="dcc_pie_graph"),
-                dcc.Graph(figure=fig_bar, id="dcc_bar_graph"),
-                dcc.Graph(figure=fig_hist, id="dcc_hist_graph")
+                html.Button('Reset_', id='button'),
+                dcc.Graph(figure=fig_pie, selectedData={'points': []}, id="dcc_pie_graph"),
+                html.Button('Submit', id='button'),
+                dcc.Graph(figure=fig_bar, selectedData={'points': []}, id="dcc_bar_graph"),
+                html.Div(dcc.Input(id = 'input-min-price', placeholder='Enter minimum price', type = 'text')),
+                html.Div(dcc.Input(id = 'input-max-price', placeholder='Enter maximum price', type = 'text')),
+                html.Button('Submit', id='button'),
+                dcc.Graph(figure=fig_hist, selectedData={'points': []}, id="dcc_hist_graph")
             ], id="html_non_map", className="four columns")
         ], id="html_row", className="row")
     ])
@@ -132,7 +141,7 @@ app.layout = html.Div([
 # --------------------------------------------------- CALLBACKS --------------------------------------------------------
 rates = list(df.ordinal_rating.unique())
 neig = list(df.neighbourhood_group_cleansed.unique())
-price = [[df.price.min(), df.price.max()]]
+price = [df.price.min(), df.price.max()]
 room = list(df.room_type.unique())
 
 def slice_df(neig=neig, rates=rates, price=price, room=room):
@@ -144,7 +153,7 @@ def slice_df(neig=neig, rates=rates, price=price, room=room):
     # slice room type
     aux = aux.loc[aux['room_type'].isin(room)]
     # slice price
-    aux = aux.loc[(aux['price'] > price[0]) & (aux['price'] < price[-1])]
+    aux = aux.loc[(aux['price'] >= price[0]) & (aux['price'] <= price[-1])]
     return aux
 
 list_of_neighbourhoods = {
@@ -175,7 +184,7 @@ list_of_neighbourhoods = {
         Input("dcc_variable_dropdown", "value")
     ],
 )
-def update_graph(selectedlocation, selectedvariable):
+def update_map(selectedlocation, selectedvariable):
 
     if selectedlocation:
         latInitial = list_of_neighbourhoods[selectedlocation]["lat"]
@@ -202,24 +211,71 @@ def update_graph(selectedlocation, selectedvariable):
                 )
             )
         )
-<<<<<<< HEAD
-    )
 
 
 @app.callback([
-    Output("map-graph", "figure"),
-    Output('room-graph', "figure"),
-    Output('rating-graph', "figure"),
-    Output('price-graph', "figure")
-], [Input("neighbourhood-dropdown", "value"),
-    Input('room-value', "value"),
-    Input('rating-value', "value"),
-    Input('price-value', "value")]
-)
-def update_graph (sel_neig, sel_room, sel_rate, sel_price):
+     Output('dcc_pie_graph', "figure"),
+     Output('dcc_bar_graph', "figure"),
+     Output('dcc_hist_graph', "figure"),
+     # Output('input-max-price', "value"),
+     # Output('input-min-price', "figure")
+    ]
+    , [Input("dcc_neighbourhood_dropdown", "value"),
+       Input("dcc_pie_graph", "clickData"),
+       Input("dcc_bar_graph", "selectedData"),
+       Input("button", "n_clicks")],
+       [State('input-min-price', 'value'),
+        State('input-max-price', 'value')])
 
-    df_sliced = slice_df(sel_neig, sel_room, sel_rate, sel_price)
+
+def update_graph(sel_neig, selected_pie, selected_bar, button, min_price, max_price):
+
+    if sel_neig!="All":
+        selected_neig = []
+        selected_neig.append(sel_neig)
+    else:
+        selected_neig = neig
+
+    if selected_pie:
+        selected_pie_unique = []
+        selected_pie_unique.append(selected_pie['points'][0]['label'])
+    else:
+        selected_pie_unique = room
+
+    if len(selected_bar['points']) != 0:
+        selected_bar_unique = list(np.intersect1d(rates, [b['y'] for b in selected_bar['points']]))
+    else:
+        selected_bar_unique = rates
+
+
+    if min_price and max_price:
+        selected_hist_unique = [int(min_price), int(max_price)]
+    elif min_price:
+        selected_hist_unique = [int(min_price), price[-1]]
+    elif max_price:
+        selected_hist_unique = [price[0], int(max_price)]
+    else:
+        selected_hist_unique = price
+
+    df_sliced = slice_df(selected_neig, selected_bar_unique, selected_hist_unique, selected_pie_unique)
+
+
+    fig_map_update, fig_pie_update, fig_bar_update, fig_hist_update = plots_actualize(df_sliced)
+
+    return fig_pie_update, fig_bar_update, fig_hist_update
+
+# for selected_data in [selected_pie, selected_bar, selected_hist]:
+#     if selected_data and selected_data['points']:
+#         selectedpoints = np.intersect1d(selectedpoints,
+#                                         [p['y'] for p in selected_data['points']])
+#     print(selectedpoints['points'])
+#     # df_sliced = df_sliced.iloc[selectedpoints, ]
+#
+# fig_map_update, fig_pie_update, fig_bar_update, fig_hist_update = plots_actualize(df_sliced)
+#
+# return fig_pie_update, fig_bar_update, fig_hist_update
+
+
 
 if __name__ == '__main__':
     app.run_server()
-

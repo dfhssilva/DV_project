@@ -51,3 +51,26 @@ fig3 = go.Figure()
 fig3.add_trace(go.Pie(labels=df['ordinal_rating'].value_counts().index, values=df['ordinal_rating'].value_counts().values))
 fig3.update_layout(title="Proportion of listing's rating")
 pyo.plot(fig3)
+
+trace = go.Histogram(x=df.price, histnorm='probability')
+
+fig = go.Figure(data=trace)
+
+fig.data[0].marker.line = dict(color='black', width=1)
+fig.data[1].line.color = 'red'
+pyo.plot(fig)
+
+fig_hist = go.Figure(
+        data=go.Histogram(
+            x=df['price'],
+            histnorm="",),
+        layout=go.Layout(
+            margin=go.layout.Margin(l=0, r=0, t=70, b=0),
+            title="Listing Rating Frequency",
+            clickmode='event+select',
+            )
+    )
+fig_hist.data[0].marker.line = dict(color='black', width=1)
+fig_hist.data[1].line.color = 'red'
+
+pyo.plot(fig_hist)
