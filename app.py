@@ -15,8 +15,6 @@ mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3
 # ------------------------------------------------- IMPORTING DATA -----------------------------------------------------
 
 # Reading Airbnb df
-from pandas import DataFrame
-
 df = pd.read_csv("./data/final_df.csv")
 
 # ----------------------------------------------------- FIGURES --------------------------------------------------------
@@ -139,7 +137,7 @@ fig_map, fig_pie, fig_bar, fig_hist = plots_actualize(df)
 # ------------------------------------------------------- APP ----------------------------------------------------------
 app = dash.Dash(__name__)
 # Deployment
-# server = app.server
+server = app.server
 
 # ------------------------------------------------------- HTML
 # Layout of Dash App
