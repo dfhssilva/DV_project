@@ -173,10 +173,8 @@ app.layout = html.Div(
                     children=[
                         html.P("""The following application describes the Airbnb listings of Lisbon.
                         This dashboard is fully interactive and can be used to choose the ideal place to stay in Lisbon.
-                        """, style={"padding": "30px 0"}),
-                        html.P("""Authorship: David Silva(2016730), David Sousa(2016697), 
-                        Miguel Ramos(2016728), Ricardo Florindo(2016727)""", style={"padding": "0 0 10px 0"})
-                    ]
+                         """, style={"padding": "30px 0"})
+                    ]  # TODO: Escrever melhor descrição
                 ),
                 html.Div(
                     id="div-header-3",
@@ -420,7 +418,7 @@ def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
         layout=go.Layout(
             autosize=True,
             margin=go.layout.Margin(l=0, r=35, t=0, b=0),
-            showlegend=False,
+            showlegend=True,
             mapbox=dict(
                 accesstoken=mapbox_access_token,
                 center={'lat': latInitial, 'lon': lonInitial},
@@ -434,17 +432,10 @@ def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
     Output("dcc_map_graph", "figure"),
     [
         Input("dcc_neighbourhood_dropdown", "value"),
-        Input("dcc_variable_dropdown", "value"),
-        Input("dcc_pie_graph", "clickData"),
-        Input("dcc_bar_graph", "selectedData"),
-        Input("button", "n_clicks")
-    ],
-    [
-        State('input-min-price', 'value'),
-        State('input-max-price', 'value')
+        Input("dcc_variable_dropdown", "value")
     ]
 )
-def update_map(selectedlocation, selectedvariable, selected_pie, selected_bar, button, min_price, max_price):
+def update_map(selectedlocation, selectedvariable):
     latInitial = 39
     lonInitial = -9.2
     zoomInitial = 8.5
@@ -456,47 +447,18 @@ def update_map(selectedlocation, selectedvariable, selected_pie, selected_bar, b
 
     list_params = [latInitial,lonInitial,zoomInitial]
 
-    if selectedlocation and selectedlocation!="All":
-        selected_neig = []
-        selected_neig.append(selectedlocation)
-    else:
-        selected_neig = neig
-
-    if selected_pie:
-        selected_pie_unique = []
-        selected_pie_unique.append(selected_pie['points'][0]['label'])
-    else:
-        selected_pie_unique = room
-
-    if selected_bar:
-        selected_bar_unique = list(np.intersect1d(rates, [b['y'] for b in selected_bar['points']]))
-    else:
-        selected_bar_unique = rates
-
-
-    if min_price and max_price:
-        selected_hist_unique = [int(min_price), int(max_price)]
-    elif min_price:
-        selected_hist_unique = [int(min_price), price[-1]]
-    elif max_price:
-        selected_hist_unique = [price[0], int(max_price)]
-    else:
-        selected_hist_unique = price
-
-    df_sliced = slice_df(selected_neig, selected_bar_unique, selected_hist_unique, selected_pie_unique)
-
 
         # Dropdown for the variables
     if selectedvariable == "host_is_superhost":
-       return graph_params(df_sliced,list_params[0],list_params[1],list_params[2],df_colors["superhost_colors"],df_colors["superhost"])
+       return graph_params(df,list_params[0],list_params[1],list_params[2],df_colors["superhost_colors"],df_colors["superhost"])
 
     elif selectedvariable == "cancellation_policy":
-        return graph_params(df_sliced,list_params[0],list_params[1],list_params[2],df_colors["cancellation_colors"],df_colors["cancellation"])
+        return graph_params(df,list_params[0],list_params[1],list_params[2],df_colors["cancellation_colors"],df_colors["cancellation"])
 
     elif selectedvariable == "availability_next_30":
-       return graph_params(df_sliced,list_params[0], list_params[1], list_params[2], df_colors["availability_colors"],df_colors["availability"])
+       return graph_params(df,list_params[0], list_params[1], list_params[2], df_colors["availability_colors"],df_colors["availability"])
     else:
-        return graph_params(df_sliced, list_params[0], list_params[1], list_params[2], "#5A6FF9", "Listing")
+        return graph_params(df, list_params[0], list_params[1], list_params[2], "#5A6FF9", "Listing")
 
 
 # Update the percentage of listings according to neighbourhood
