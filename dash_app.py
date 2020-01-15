@@ -1,7 +1,5 @@
 # imports
-import zipfile as zp
-from typing import Type
-
+import numpy as np
 import pandas as pd
 import plotly.offline as pyo
 import plotly.figure_factory as ff
@@ -29,7 +27,9 @@ fig_map = go.Figure(
     data=go.Scattermapbox(
         lat=df["latitude"],
         lon=df["longitude"],
-        mode="markers"),
+        mode="markers",
+        marker=dict(
+            color="blue")),
     layout=go.Layout(
         autosize=True,
         margin=go.layout.Margin(l=0, r=0, t=0, b=0),
@@ -101,9 +101,8 @@ fig_hist.update_layout(paper_bgcolor='rgba(0,0,0,0)',
 
 # ------------------------------------------------------- APP ----------------------------------------------------------
 app = dash.Dash(__name__)
-
-    # ------------------------------------------------------- APP ----------------------------------------------------------
-    app = dash.Dash(__name__, assets_folder="./assets")
+# Deployment
+# server = app.server
 
 # ------------------------------------------------------- HTML
 # Layout of Dash App
@@ -169,10 +168,10 @@ app.layout = html.Div(
                                 dcc.Dropdown(
                                     id='dcc_variable_dropdown',
                                     options=[{'label': i, 'value': j} for i, j in zip(
-                                        ["Availability", "Superhost", "Property Type", "Cancellation Policy"],
-                                        ["availability_next_30", "host_is_superhost", "property_type",
-                                         "cancellation_policy"])],
+                                        ["Availability", "Superhost", "Cancellation Policy"],
+                                        ["availability_next_30", "host_is_superhost","cancellation_policy"])],
                                     placeholder="Select Variable",
+                                    #value ="host_is_superhost",
                                     style={'max-width': '250px'}
                                 )
                             ]
@@ -267,31 +266,62 @@ list_of_neighbourhoods = {
 
 # Define a new df with the colors
 
-    df_colors = df[["property_id","host_is_superhost","cancellation_policy","available"]].set_index("property_id")
-    df_colors.columns = ["superhost","cancellation","availability"]
+df_colors = df[["property_id","host_is_superhost","cancellation_policy","available"]].set_index("property_id")
+df_colors.columns = ["superhost","cancellation","availability"]
 
-    #Superhost colors
-    df_colors["superhost_colors"] = "red"
-    df_colors.loc[df_colors["superhost"] == 1, "superhost_colors"] = "green" #verde
-    #Cancellation colors
-    df_colors["cancellation_colors"]= "red" #vermelho strict
-    df_colors.loc[df_colors["cancellation"] == "flexible", "cancellation_colors"] = "green"
-    df_colors.loc[df_colors["cancellation"] == "moderate", "cancellation_colors"] = "yellow"
-    #Availability colors
-    df_colors["availability_colors"] = "red" #low
-    df_colors.loc[df_colors["availability"] == "Medium", "availability_colors"] = "yellow"
-    df_colors.loc[df_colors["availability"] == "High", "availability_colors"] = "green"
+#Superhost colors
+df_colors["superhost_colors"] = "red"
+df_colors.loc[df_colors["superhost"] == 1, "superhost_colors"] = "green" #verde
+#Cancellation colors
+df_colors["cancellation_colors"]= "red" #vermelho strict
+df_colors.loc[df_colors["cancellation"] == "flexible", "cancellation_colors"] = "green"
+df_colors.loc[df_colors["cancellation"] == "moderate", "cancellation_colors"] = "yellow"
+#Availability colors
+df_colors["availability_colors"] = "red" #low
+df_colors.loc[df_colors["availability"] == "Medium", "availability_colors"] = "yellow"
+df_colors.loc[df_colors["availability"] == "High", "availability_colors"] = "green"
 
+# df.loc[df["price"] == 105 & df["Years_host"]==6]
 
+def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
+    return go.Figure(
+        data=[
+            go.Scattermapbox(
+                #name = [legend],
+                ids=df["property_id"],
+                lat=df["latitude"],
+                lon=df["longitude"],
+                mode="markers",
+                marker=dict(
+                    color=color
+                ),
+                customdata=np.array([df.price.values, df.Years_host.values,df.pref_amenities, df.listing_url]).T,
+                hovertemplate='Price: %{customdata[0]:$.2f} <br> Nº of years as host: %{customdata[1]} <br>'
+                              ' Amenities: %{customdata[2]} <br> Link: %{customdata[3]} ',
+            ),
+        ],
+        # Layout
+        layout=go.Layout(
+            autosize=True,
+            margin=go.layout.Margin(l=0, r=35, t=0, b=0),
+            showlegend=True,
+            mapbox=dict(
+                accesstoken=mapbox_access_token,
+                center={'lat': latInitial, 'lon': lonInitial},
+                zoom=zoomInitial,
+                style="dark",
+            )
+        )
+    )
 
 @app.callback(
     Output("dcc_map_graph", "figure"),
     [
         Input("dcc_neighbourhood_dropdown", "value"),
         Input("dcc_variable_dropdown", "value")
-    ],
+    ]
 )
-def update_graph(selectedlocation, selectedvariable):
+def update_map(selectedlocation, selectedvariable):
     latInitial = 39
     lonInitial = -9.2
     zoomInitial = 8.5
@@ -301,101 +331,20 @@ def update_graph(selectedlocation, selectedvariable):
         lonInitial = list_of_neighbourhoods[selectedlocation]["lon"]
         zoomInitial = list_of_neighbourhoods[selectedlocation]["zoom"]
 
-        # Dropdown for the variables
+    list_params = [latInitial,lonInitial,zoomInitial]
 
+
+        # Dropdown for the variables
     if selectedvariable == "host_is_superhost":
-        return go.Figure(
-        # Data
-            data = [
-                go.Scattermapbox(
-                    ids=df["property_id"],
-                    lat=df["latitude"],
-                    lon=df["longitude"],
-                    mode="markers",
-                    marker = dict(
-                            color= df_colors["superhost_colors"]
-                    ),
-                ),
-            ],
-        # Layout
-            layout = go.Layout(
-                    autosize=True,
-                    margin=go.layout.Margin(l=0, r=35, t=0, b=0),
-                    showlegend=False,
-                    mapbox=dict(
-                        accesstoken="pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ",
-                        center = {'lat': latInitial, 'lon': lonInitial},
-                        zoom=zoomInitial,
-                        style="dark",
-                    )
-            )
-        )
+       return graph_params(df,list_params[0],list_params[1],list_params[2],df_colors["superhost_colors"],df_colors["superhost"])
+
     elif selectedvariable == "cancellation_policy":
-        return go.Figure(
-            # Data
-            data=[
-                go.Scattermapbox(
-                    ids=df["property_id"],
-                    lat=df["latitude"],
-                    lon=df["longitude"],
-                    mode="markers",
-                    marker=dict(
-                        color=df_colors["cancellation_colors"]
-                    ),
-                ),
-            ],
-            # Layout
-            layout=go.Layout(
-                autosize=True,
-                margin=go.layout.Margin(l=0, r=35, t=0, b=0),
-                showlegend=False,
-                mapbox=dict(
-                    accesstoken="pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ",
-                    center={'lat': latInitial, 'lon': lonInitial},
-                    zoom=zoomInitial,
-                    style="dark"
-                )
-            )
-        )
+        return graph_params(df,list_params[0],list_params[1],list_params[2],df_colors["cancellation_colors"],df_colors["cancellation"])
 
     elif selectedvariable == "availability_next_30":
-        return go.Figure(
-            # Data
-            data=[
-                go.Scattermapbox(
-                    ids=df["property_id"],
-                    lat=df["latitude"],
-                    lon=df["longitude"],
-                    mode="markers",
-                    marker=dict(
-                        color=df_colors["availability_colors"]
-
-                    ),
-                    customdata =[df.price,df.Years_host],
-
-                    hovertemplate= '<i>Price</i>: %{customdata[0]:$.2f}'+
-                                    '<br>Nº of years as host: %{customdata[1]}<br>'
-
-                                    # 'Nº of years as host: %{customdata[0]} <br> Price: %{customdata[1]:$.2f} '
-                                    #"<br>Nº of years as host: %{customdata[0]} <br>Price: %{customdata[1]:$.2f}",
-                                    #"Price: %{customdata[1]:$.2f}<extra></extra>",
-                                    #"<br>Nº of years as host: %{customdata}<br>",
-                ),
-            ],
-            # Layout
-            layout=go.Layout(
-                autosize=True,
-                margin=go.layout.Margin(l=0, r=35, t=0, b=0),
-                showlegend=False,
-                mapbox=dict(
-                    #hovermode = "closest",
-                    accesstoken="pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ",
-                    style="dark",
-                    center={'lat': latInitial, 'lon': lonInitial},
-                    zoom=zoomInitial,
-                )
-            )
-)
+       return graph_params(df,list_params[0], list_params[1], list_params[2], df_colors["availability_colors"],df_colors["availability"])
+    else:
+        return graph_params(df, list_params[0], list_params[1], list_params[2], "blue", "Listing")
 
 
 # Update the percentage of listings according to neighbourhood
