@@ -309,13 +309,13 @@ app.layout = html.Div(
                                             children=[
                                                 dcc.Input(
                                                     id='input-min-price',
-                                                    className="four columns css_button",
+                                                    className="four columns",
                                                     placeholder='Minimum price',
                                                     type='text'
                                                 ),
                                                 dcc.Input(
                                                     id='input-max-price',
-                                                    className="four columns css_button",
+                                                    className="four columns",
                                                     placeholder='Maximum price',
                                                     type='text'
                                                 ),
