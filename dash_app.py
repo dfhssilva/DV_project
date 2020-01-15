@@ -275,8 +275,8 @@
                         ),
                         customdata =[df.price,df.Years_host],
 
-                        hovertemplate= '<i>Price</i>: %{customdata:$.2f}'+
-                                        '<br>Nº of years as host: %{customdata}<br>'
+                        hovertemplate= '<i>Price</i>: %{customdata[0]:$.2f}'+
+                                        '<br>Nº of years as host: %{customdata[1]}<br>'
 
                                         # 'Nº of years as host: %{customdata[0]} <br> Price: %{customdata[1]:$.2f} '
                                         #"<br>Nº of years as host: %{customdata[0]} <br>Price: %{customdata[1]:$.2f}",
