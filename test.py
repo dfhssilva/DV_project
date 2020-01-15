@@ -66,6 +66,8 @@ fig_pie = go.Figure(
         hoverinfo='label',
         showlegend=False),
     layout=go.Layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=go.layout.Margin(l=0, r=0, t=70, b=0),
         title='Proportion of Room Type')
 )
@@ -76,6 +78,8 @@ fig_bar = go.Figure(
         y=df['ordinal_rating'].value_counts().index,
         orientation='h'),
     layout=go.Layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=go.layout.Margin(l=0, r=0, t=70, b=0),
         title="Listing Rating Frequency")
 )
@@ -102,7 +106,9 @@ fig_hist = go.Figure(
 
 fig_hist.data[0].marker.line = dict(color='black', width=2)
 fig_hist.data[1].line.color = 'red'
-fig_hist.update_layout(xaxis_title='Price ($)',
+fig_hist.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                       plot_bgcolor='rgba(0,0,0,0)',
+                       xaxis_title='Price ($)',
                        yaxis_title='Relative frequencies',
                        showlegend=False,
                        title='Price distribution')
@@ -115,59 +121,16 @@ app = dash.Dash(__name__)
 app.layout = html.Div(
     children=[
         html.Div(
+            # TOP ROW
             className="row",
             children=[
-                # Column for user controls
                 html.Div(
-                    className="four columns div-user-controls",
+                    className="two columns div-user-controls",
                     children=[
                         html.Img(
                             className="logo", src=app.get_asset_url("airbnb_logo.png")
                         ),
-                        html.Img(
-                            className="logo", src=app.get_asset_url("dash-logo-new.png")
-                        ),
-                        html.H2("DASH - AIRBNB APP"),
-                        html.P(
-                            """Select different days using the date picker or by selecting 
-                            different time frames on the histogram."""
-                        ),
-                        # Change to side-by-side for mobile layout
-                        html.Div(
-                            className="row",
-                            children=[
-                                html.Div(
-                                    className="div-for-dropdown",
-                                    children=[
-                                        # Dropdown for locations on map
-                                        dcc.Dropdown(
-                                            options=[{'label': i, 'value': i} for i in
-                                                ["All"] + df["neighbourhood_group_cleansed"].unique().tolist()],
-                                            value='All',
-                                            # placeholder="Select a municipality",
-                                            id='dcc_neighbourhood_dropdown'
-                                        )
-                                    ]
-                                ),
-                                html.Div(
-                                    className="div-for-dropdown",
-                                    children=[
-                                        # Dropdown to select variables
-                                        dcc.Dropdown(
-                                            options=[{'label': i, 'value': j} for i, j in zip(
-                                                ["Availability", "Superhost", "Property Type", "Cancellation Policy"],
-                                                ["availability_next_30", "host_is_superhost", "property_type",
-                                                 "cancellation_policy"])],
-                                            value='availability_next_30',
-                                            # placeholder="Select a variable",
-                                            id='dcc_variable_dropdown'
-                                        )
-                                    ]
-                                )
-                            ]
-                        ),
-                        html.P(id="total-listings"),
-                        html.P(id="total-listings-selection"),
+                        html.H3("AIRBNB APP"),
                         dcc.Markdown(
                             children=[
                                 "Source: [Inside Airbnb](http://insideairbnb.com/get-the-data.html)"
@@ -175,18 +138,72 @@ app.layout = html.Div(
                         )
                     ]
                 ),
-                # Column for app graphs and plots
                 html.Div(
-                    className="eight columns div-for-charts bg-grey",
-
+                    className="four columns div-user-controls",
                     children=[
-                        dcc.Graph(figure=fig_map, id="dcc_map_graph"),
+                        "The following application describes the airbnb listings of Lisbon."
+                    ]
+                ),
+                html.Div(
+                    className="three columns div-user-controls",
+                    children=[
+                        "Interact with the dashboard: ",
                         html.Div(
-                            className="text-padding",
+                            className="div-for-dropdown",
                             children=[
-                                "Description here."
+                                # Dropdown for locations on map
+                                dcc.Dropdown(
+                                    id='dcc_neighbourhood_dropdown',
+                                    options=[{'label': i, 'value': i} for i in
+                                        ["All"] + df["neighbourhood_group_cleansed"].unique().tolist()],
+                                    # value='All',
+                                    placeholder="Select Municipality",
+                                    style={'max-width': '250px'}
+                                )
                             ]
                         ),
+                        html.Div(
+                            className="div-for-dropdown",
+                            children=[
+                                # Dropdown to select variables
+                                dcc.Dropdown(
+                                    id='dcc_variable_dropdown',
+                                    options=[{'label': i, 'value': j} for i, j in zip(
+                                        ["Availability", "Superhost", "Property Type", "Cancellation Policy"],
+                                        ["availability_next_30", "host_is_superhost", "property_type",
+                                         "cancellation_policy"])],
+                                    # value='availability_next_30',
+                                    placeholder="Select Variable",
+                                    style={'max-width': '250px'}
+                                )
+                            ]
+                        )
+                    ]
+                ),
+                html.Div(
+                    className="three columns div-user-controls",
+                    children=[
+                        "Percentage of listings: ",
+                        html.P(id="percentage-listings", style={"height": "35px"}),
+                        "Rank of location: ",
+                        html.P(id="rank-location", style={"height": "35px"}),
+                    ]
+                )
+            ]
+        ),
+        html.Div(
+            children=[
+                html.Div(
+                    # MAP
+                    className="eight columns",
+                    children=[
+                        dcc.Graph(figure=fig_map, id="dcc_map_graph")
+                    ]
+                ),
+                html.Div(
+                    # GRAPHS
+                    className="four columns scrollcol bg-grey",
+                    children=[
                         dcc.Graph(figure=fig_pie, id="dcc_pie_graph"),
                         dcc.Graph(figure=fig_bar, id="dcc_bar_graph"),
                         dcc.Graph(figure=fig_hist, id="dcc_hist_graph")
@@ -196,7 +213,6 @@ app.layout = html.Div(
         )
     ]
 )
-
 #
 # # Gets the amount of days in the specified month
 # # Index represents month (0 is April, 1 is May, ... etc.)

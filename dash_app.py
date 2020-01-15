@@ -8,6 +8,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
+# Plotly mapbox public token
+mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ"
+
 # ------------------------------------------------- IMPORTING DATA -----------------------------------------------------
 
 # Reading Airbnb df
@@ -24,7 +27,7 @@ fig_map = go.Figure(
         margin=go.layout.Margin(l=0, r=0, t=0, b=0),
         showlegend=False,
         mapbox=dict(
-            accesstoken="pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ",
+            accesstoken=mapbox_access_token,
             style="dark",
             center={'lat': 39, 'lon': -9.2},
             zoom=8.5,
@@ -41,6 +44,8 @@ fig_pie = go.Figure(
         hoverinfo='label',
         showlegend=False),
     layout=go.Layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=go.layout.Margin(l=0, r=0, t=70, b=0),
         title='Proportion of Room Type')
 )
@@ -51,6 +56,8 @@ fig_bar = go.Figure(
         y=df['ordinal_rating'].value_counts().index,
         orientation='h'),
     layout=go.Layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         margin=go.layout.Margin(l=0, r=0, t=70, b=0),
         title="Listing Rating Frequency")
 )
@@ -77,76 +84,118 @@ fig_hist = go.Figure(
 
 fig_hist.data[0].marker.line = dict(color='black', width=2)
 fig_hist.data[1].line.color = 'red'
-fig_hist.update_layout(xaxis_title='Price ($)',
+fig_hist.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                       plot_bgcolor='rgba(0,0,0,0)',
+                       xaxis_title='Price ($)',
                        yaxis_title='Relative frequencies',
                        showlegend=False,
                        title='Price distribution')
 
 # ------------------------------------------------------- APP ----------------------------------------------------------
-app = dash.Dash(__name__, assets_folder="./assets")
+app = dash.Dash(__name__)
 
 # Add the following line before deployment
 # server = app.server
 
-# ------------------------------------------------------- HTML ---------------------------------------------------------
-app.layout = html.Div(id="app-body", className="app-body", children=[
-    html.Div(id="app-control-tabs", className="control-tabs", children=[
-        dcc.Tabs(id="app-tabs", value="what-is", children=[
-            dcc.Tab(
-                label="About",
-                value="what-is",
-                children=html.Div(className="control-tab", children=[
-                    html.H4(className="what-is", children="What is Airbnb Lisbon Project?"),
-                    html.P("This is a text example"),
-                    html.P("Another one"),
-                    html.P("DJ Kaled"),
-                    html.Div([
-                        "Source: ",
-                        html.A("Inside Airbnb Website",
-                               href="http://insideairbnb.com/get-the-data.html")
-                        ]),
-                    html.Br()
-                    ])
+# ------------------------------------------------------- HTML
+# Layout of Dash App
+app.layout = html.Div(
+    children=[
+        html.Div(
+            # TOP ROW
+            className="row",
+            children=[
+                html.Div(
+                    className="two columns div-user-controls",
+                    children=[
+                        html.Img(
+                            className="logo", src=app.get_asset_url("airbnb_logo.png")
+                        ),
+                        html.H3("AIRBNB APP"),
+                        dcc.Markdown(
+                            children=[
+                                "Source: [Inside Airbnb](http://insideairbnb.com/get-the-data.html)"
+                            ]
+                        )
+                    ]
                 ),
-            dcc.Tab(
-                label="Graphs",
-                value="graphs"
-            )
-        ])
-    ]),
-    html.Div(id='html_map', className="circos-display-none", children=[
-        dcc.Graph(figure=fig_map, id="dcc_map_graph")
-    ])
-])
-#             html.Div([
-#                 html.Div([
-#                     dcc.Dropdown(
-#                     options=[{'label': i, 'value': i} for i in
-#                              ["All"] + df["neighbourhood_group_cleansed"].unique().tolist()],
-#                     value='All',
-#                     # placeholder="Select a municipality",
-#                     id='dcc_neighbourhood_dropdown'
-#                     ),
-#                     dcc.Dropdown(
-#                         options=[{'label': i, 'value': j} for i, j in zip(
-#                             ["Availability", "Superhost", "Property Type", "Cancellation Policy"],
-#                             ["availability_next_30", "host_is_superhost", "property_type", "cancellation_policy"])],
-#                         value='availability_next_30',
-#                         # placeholder="Select a variable",
-#                         id='dcc_variable_dropdown'
-#                     )
-#                 ]),
-#                 html.Div([
-#                     dcc.Graph(figure=fig_pie, id="dcc_pie_graph"),
-#                     dcc.Graph(figure=fig_bar, id="dcc_bar_graph"),
-#                     dcc.Graph(figure=fig_hist, id="dcc_hist_graph")
-#                 ], className='control-tab')
-#             ], id="html_non_map", className="four columns")
-#         ], id="html_subsection")
-#     ])
-# ])
+                html.Div(
+                    className="four columns div-user-controls",
+                    children=[
+                        "The following application describes the airbnb listings of Lisbon."
+                    ]
+                ),
+                html.Div(
+                    className="three columns div-user-controls",
+                    children=[
+                        "Interact with the dashboard: ",
+                        html.Div(
+                            className="div-for-dropdown",
+                            children=[
+                                # Dropdown for locations on map
+                                dcc.Dropdown(
+                                    id='dcc_neighbourhood_dropdown',
+                                    options=[{'label': i, 'value': i} for i in
+                                        ["All"] + df["neighbourhood_group_cleansed"].unique().tolist()],
+                                    value=None,
+                                    placeholder="Select Municipality",
+                                    style={'max-width': '250px'}
+                                )
+                            ]
+                        ),
+                        html.Div(
+                            className="div-for-dropdown",
+                            children=[
+                                # Dropdown to select variables
+                                dcc.Dropdown(
+                                    id='dcc_variable_dropdown',
+                                    options=[{'label': i, 'value': j} for i, j in zip(
+                                        ["Availability", "Superhost", "Property Type", "Cancellation Policy"],
+                                        ["availability_next_30", "host_is_superhost", "property_type",
+                                         "cancellation_policy"])],
+                                    value=None,
+                                    placeholder="Select Variable",
+                                    style={'max-width': '250px'}
+                                )
+                            ]
+                        )
+                    ]
+                ),
+                html.Div(
+                    className="three columns div-user-controls",
+                    children=[
+                        "Percentage of listings: ",
+                        html.P(id="percentage-listings", style={"height": "35px"}),
+                        "Rank of location: ",
+                        html.P(id="rank-location", style={"height": "35px"}),
+                    ]
+                )
+            ]
+        ),
+        html.Div(
+            children=[
+                html.Div(
+                    # MAP
+                    className="eight columns",
+                    children=[
+                        dcc.Graph(figure=fig_map, id="dcc_map_graph")
+                    ]
+                ),
+                html.Div(
+                    # GRAPHS
+                    className="four columns scrollcol bg-grey",
+                    children=[
+                        dcc.Graph(figure=fig_pie, id="dcc_pie_graph"),
+                        dcc.Graph(figure=fig_bar, id="dcc_bar_graph"),
+                        dcc.Graph(figure=fig_hist, id="dcc_hist_graph")
+                    ]
+                )
+            ]
+        )
+    ]
+)
 
-# --------------------------------------------------- CALLBACKS --------------------------------------------------------
+# --------------------------------------------------- CALLBACKS
 rates = list(df.ordinal_rating.unique())
 neig = list(df.neighbourhood_group_cleansed.unique())
 price = [[df.price.min(), df.price.max()]]
@@ -193,32 +242,35 @@ list_of_neighbourhoods = {
     ],
 )
 def update_graph(selectedlocation, selectedvariable):
+    latInitial = 39
+    lonInitial = -9.2
+    zoomInitial = 8.5
 
     if selectedlocation:
         latInitial = list_of_neighbourhoods[selectedlocation]["lat"]
         lonInitial = list_of_neighbourhoods[selectedlocation]["lon"]
         zoomInitial = list_of_neighbourhoods[selectedlocation]["zoom"]
 
-        return go.Figure(
-            data=[
-                go.Scattermapbox(
-                    lat=df["latitude"],
-                    lon=df["longitude"],
-                    mode="markers"
-                )
-            ],
-            layout=go.Layout(
-                autosize=True,
-                margin=go.layout.Margin(l=0, r=0, t=0, b=0),
-                showlegend=False,
-                mapbox=dict(
-                    accesstoken="pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ",
-                    center={'lat': latInitial, 'lon': lonInitial},
-                    zoom=zoomInitial,
-                    style="dark"
-                )
+    return go.Figure(
+        data=[
+            go.Scattermapbox(
+                lat=df["latitude"],
+                lon=df["longitude"],
+                mode="markers"
+            )
+        ],
+        layout=go.Layout(
+            autosize=True,
+            margin=go.layout.Margin(l=0, r=0, t=0, b=0),
+            showlegend=False,
+            mapbox=dict(
+                accesstoken=mapbox_access_token,
+                center={'lat': latInitial, 'lon': lonInitial},
+                zoom=zoomInitial,
+                style="dark"
             )
         )
+    )
 
 if __name__ == '__main__':
     app.run_server()

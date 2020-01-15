@@ -49,8 +49,8 @@ a {
 }
 /* Graph Control Objects ––––––––––––––––––––––––––––––––––––––––––––––––––*/
 .div-user-controls {
-  padding-left: 55px;
-  padding-top: 64px;
+  padding-left: 20px;
+  padding-top: 30px;
 }
 .div-for-dropdown {
   padding-top: 12px;
@@ -61,9 +61,10 @@ a {
   text-align: center;
 }
 .logo {
-  height: 35px;
+  height: 70px;
   padding-bottom: 12px;
   margin-left: 8px;
+
 }
 .Select-control, .Select-menu-outer, .Select-multi-value-wrapper, .select-up, .is-open .Select-control {
   background-color: #1E1E1E;
@@ -202,4 +203,10 @@ a {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #d8d8d870 !important;
+}
+/* User Defined ----------------------------------------------------------------------*/
+.scrollcol{
+  position: relative;
+  overflow-y: scroll;
+  max-height: 500px;
 }
