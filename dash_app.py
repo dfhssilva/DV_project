@@ -25,21 +25,21 @@ df = pd.read_csv("./data/final_df.csv")
 def plots_actualize(df2):
 
     fig_map = go.Figure(
-    data=go.Scattermapbox(
-        lat=df2["latitude"],
-        lon=df2["longitude"],
-        mode="markers",
-        marker=dict(
-            color="blue")),
-    layout=go.Layout(
-        autosize=True,
-        margin=go.layout.Margin(l=0, r=0, t=0, b=0),
-        showlegend=False,
-        mapbox=dict(
-            accesstoken=mapbox_access_token,
-            style="dark",
-            center={'lat': 39, 'lon': -9.2},
-            zoom=8.5,
+        data=go.Scattermapbox(
+            lat=df2["latitude"],
+            lon=df2["longitude"],
+            mode="markers",
+            marker=dict(
+                color="blue")),
+        layout=go.Layout(
+            autosize=True,
+            margin=go.layout.Margin(l=0, r=0, t=0, b=0),
+            showlegend=False,
+            mapbox=dict(
+                accesstoken=mapbox_access_token,
+                style="dark",
+                center={'lat': 39, 'lon': -9.2},
+                zoom=8.5,
             )
         )
     )
@@ -62,6 +62,11 @@ def plots_actualize(df2):
             showlegend=False,
             textfont=dict(
                 color="white"
+            ),
+            marker=(
+                dict(
+                    colors=pie_colors
+                )
             )
         ),
         layout=go.Layout(
@@ -86,10 +91,10 @@ def plots_actualize(df2):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             margin=go.layout.Margin(l=0, r=0, t=70, b=0),
-            clickmode='event+select'),
+            clickmode='event+select',
             font=dict(
                 color="white"
-            ),
+            )
         )
     )
 
@@ -284,8 +289,12 @@ app.layout = html.Div(
                                                             className="five columns"),
                                             ]
                                         ),
-                                        html.Div(dcc.Input(id = 'input-min-price', placeholder='Enter minimum price', type = 'text')),
-                                        html.Div(dcc.Input(id = 'input-max-price', placeholder='Enter maximum price', type = 'text')),
+                                        html.Div(dcc.Input(id='input-min-price',
+                                                           placeholder='Enter minimum price',
+                                                           type='text')),
+                                        html.Div(dcc.Input(id='input-max-price',
+                                                           placeholder='Enter maximum price',
+                                                           type='text')),
                                         html.Button('Submit', id='button'),
                                         dcc.Graph(figure=fig_hist, id="dcc_hist_graph", style={"max-height": "400px"}),
                                     ]
@@ -364,7 +373,6 @@ df_colors["availability_colors"] = "red" #low
 df_colors.loc[df_colors["availability"] == "Medium", "availability_colors"] = "yellow"
 df_colors.loc[df_colors["availability"] == "High", "availability_colors"] = "green"
 
-# df.loc[df["price"] == 105 & df["Years_host"]==6]
 
 def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
     return go.Figure(
@@ -483,12 +491,14 @@ def update_graph(sel_neig, selected_pie, selected_bar, button, min_price, max_pr
 
 
     if min_price and max_price:
+        print(max_price)
         selected_hist_unique = [int(min_price), int(max_price)]
     elif min_price:
         selected_hist_unique = [int(min_price), price[-1]]
     elif max_price:
         selected_hist_unique = [price[0], int(max_price)]
     else:
+        print(min_price)
         selected_hist_unique = price
 
     df_sliced = slice_df(selected_neig, selected_bar_unique, selected_hist_unique, selected_pie_unique)
