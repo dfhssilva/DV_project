@@ -9,6 +9,8 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import numpy as np
 
+
+
 # Plotly mapbox public token
 mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ"
 
@@ -254,6 +256,7 @@ app.layout = html.Div(
                                                 html.P('Proportion of Room Type',
                                                        className="seven columns plot_title"),
                                                 html.Button(children="Reset",
+                                                            id='button_pie',
                                                             className="five columns"),
                                             ]
                                         ),
@@ -268,9 +271,12 @@ app.layout = html.Div(
                                             className="row",
                                             children=[
                                                 html.P("Listing Rating Frequency",
-                                                       className="seven columns plot_title"),
+                                                       className="seven columns plot_title"
+                                                ),
                                                 html.Button(children="Reset",
-                                                            className="five columns"),
+                                                            id='button_bar',
+                                                            className="five columns"
+                                                ),
                                             ]
                                         ),
                                         dcc.Graph(figure=fig_bar, id="dcc_bar_graph", style={"max-height": "400px"}),
@@ -295,7 +301,7 @@ app.layout = html.Div(
                                         html.Div(dcc.Input(id='input-max-price',
                                                            placeholder='Enter maximum price',
                                                            type='text')),
-                                        html.Button('Submit', id='button'),
+                                        html.Button('Submit', id='button_price'),
                                         dcc.Graph(figure=fig_hist, id="dcc_hist_graph", style={"max-height": "400px"}),
                                     ]
                                 )
@@ -321,6 +327,11 @@ rates = list(df.ordinal_rating.unique())
 neig = list(df.neighbourhood_group_cleansed.unique())
 price = [df.price.min(), df.price.max()]
 room = list(df.room_type.unique())
+
+aux_selected_bar = None
+aux_selected_pie = None
+bar_click = 0
+pie_click = 0
 
 
 def slice_df(neig=neig, rates=rates, price=price, room=room):
@@ -372,6 +383,29 @@ df_colors.loc[df_colors["cancellation"] == "moderate", "cancellation_colors"] = 
 df_colors["availability_colors"] = "red" #low
 df_colors.loc[df_colors["availability"] == "Medium", "availability_colors"] = "yellow"
 df_colors.loc[df_colors["availability"] == "High", "availability_colors"] = "green"
+
+
+
+# def check_click(button_b, button_p):
+#     global bar_click, pie_click
+#
+#     check_b = False
+#     check_p = False
+#
+#     if button_b is None:
+#         button_b = 0
+#     if button_b != bar_click:
+#         bar_click += 1
+#         check_b = True
+#
+#     if button_p is None:
+#         button_p = 0
+#     if button_p != pie_click:
+#         pie_click += 1
+#         check_p = True
+#
+#     return (check_b, check_p)
+
 
 
 def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
@@ -438,51 +472,43 @@ def update_map(selectedlocation, selectedvariable):
         return graph_params(df, list_params[0], list_params[1], list_params[2], "blue", "Listing")
 
 
-# Update the percentage of listings according to neighbourhood
-@app.callback(
-    Output("percentage-listings", "children"),
-    [
-        Input("dcc_neighbourhood_dropdown", "value")  # TODO: Este input está errado. Tem de ser filtros aos dados
-    ]
-)
-def update_perc_listings(neighbpicked):
-    if neighbpicked is None:
-        return ""
-    elif neighbpicked == "All":
-        return "100%"
-    else:
-        return "{0:.1f}%".format(
-            (df.loc[df["neighbourhood_group_cleansed"] == neighbpicked].shape[0] / nobs)*100
-        )
-
 @app.callback([
      Output('dcc_pie_graph', "figure"),
      Output('dcc_bar_graph', "figure"),
      Output('dcc_hist_graph', "figure"),
-     # Output('input-max-price', "value"),
-     # Output('input-min-price', "figure")
+     Output("percentage-listings", "children"),
     ]
     , [Input("dcc_neighbourhood_dropdown", "value"),
        Input("dcc_pie_graph", "clickData"),
        Input("dcc_bar_graph", "selectedData"),
-       Input("button", "n_clicks")],
+       Input("button_price", "n_clicks"),
+       Input("button_pie", "n_clicks"),
+       Input("button_bar", "n_clicks")],
        [State('input-min-price', 'value'),
         State('input-max-price', 'value')])
 
 
-def update_graph(sel_neig, selected_pie, selected_bar, button, min_price, max_price):
+def update_graph(sel_neig, selected_pie, selected_bar, button_price, button_pie, button_bar, min_price, max_price):
+    global aux_selected_bar, aux_selected_pie, pie_click, bar_click
 
-    if sel_neig and sel_neig!="All":
-        selected_neig = []
-        selected_neig.append(sel_neig)
-    else:
+    selected_neig = []
+    selected_neig.append(sel_neig)
+
+    if not sel_neig:
         selected_neig = neig
+        list_percent_update = ""
+    elif sel_neig=="All":
+        selected_neig = neig
+        list_percent_update = "100%"
+
 
     if selected_pie:
         selected_pie_unique = []
         selected_pie_unique.append(selected_pie['points'][0]['label'])
+
     else:
         selected_pie_unique = room
+
 
     if selected_bar:
         selected_bar_unique = list(np.intersect1d(rates, [b['y'] for b in selected_bar['points']]))
@@ -491,22 +517,45 @@ def update_graph(sel_neig, selected_pie, selected_bar, button, min_price, max_pr
 
 
     if min_price and max_price:
-        print(max_price)
         selected_hist_unique = [int(min_price), int(max_price)]
     elif min_price:
         selected_hist_unique = [int(min_price), price[-1]]
     elif max_price:
         selected_hist_unique = [price[0], int(max_price)]
     else:
-        print(min_price)
         selected_hist_unique = price
 
+    # check_b, check_p = check_click(button_bar, button_pie)
+
+    if button_pie != pie_click:
+        selected_pie_unique = room
+    elif button_pie != None and selected_pie == aux_selected_pie:
+        selected_pie_unique = room
+
+    pie_click = button_pie
+    aux_selected_pie = selected_pie
+
+
+    if button_bar != bar_click:
+        selected_bar_unique = rates
+    elif button_bar != None and selected_bar == aux_selected_bar:
+        selected_bar_unique = rates
+
+    bar_click = button_bar
+    aux_selected_bar = selected_bar
+
+
+
+
     df_sliced = slice_df(selected_neig, selected_bar_unique, selected_hist_unique, selected_pie_unique)
+
+    if sel_neig and sel_neig != 'All':
+        list_percent_update = "{0:.1f}%".format((df_sliced.shape[0] / nobs)*100)
 
 
     fig_map_update, fig_pie_update, fig_bar_update, fig_hist_update = plots_actualize(df_sliced)
 
-    return fig_pie_update, fig_bar_update, fig_hist_update
+    return fig_pie_update, fig_bar_update, fig_hist_update, list_percent_update
 
 @app.callback(
     Output("rank-location", "children"),
@@ -525,3 +574,6 @@ def update_rank_municip(neighbpicked):
 
 if __name__ == '__main__':
     app.run_server()
+
+
+
