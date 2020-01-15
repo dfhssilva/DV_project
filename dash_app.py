@@ -1,4 +1,7 @@
 # imports
+import zipfile as zp
+from typing import Type
+
 import pandas as pd
 import plotly.offline as pyo
 import plotly.figure_factory as ff
@@ -14,7 +17,11 @@ mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3
 # ------------------------------------------------- IMPORTING DATA -----------------------------------------------------
 
 # Reading Airbnb df
+from pandas import DataFrame
+
 df = pd.read_csv("./data/final_df.csv")
+
+
 
 # ----------------------------------------------------- FIGURES --------------------------------------------------------
 fig_map = go.Figure(
