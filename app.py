@@ -301,8 +301,6 @@ app.layout = html.Div(
                                             children=[
                                                 html.P("Price Distribution",
                                                        className="eight columns plot_title"),
-                                                html.Button(children="Reset",
-                                                            className="four columns"),
                                             ]
                                         ),
                                         html.Div(
@@ -356,9 +354,17 @@ room = list(df.room_type.unique())
 
 aux_selected_bar = None
 aux_selected_pie = None
+aux_pie_unique = room
+aux_bar_unique = rates
 bar_click = 0
 pie_click = 0
 
+aux_selected_bar_map = None
+aux_selected_pie_map = None
+aux_pie_unique_map = room
+aux_bar_unique_map = rates
+bar_click_map = 0
+pie_click_map = 0
 
 def slice_df(neig=neig, rates=rates, price=price, room=room):
     aux = df.copy()
@@ -442,13 +448,23 @@ def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
     )
 
 @app.callback(
-    Output("dcc_map_graph", "figure"),
-    [
-        Input("dcc_neighbourhood_dropdown", "value"),
-        Input("dcc_variable_dropdown", "value")
-    ]
-)
-def update_map(selectedlocation, selectedvariable):
+        Output("dcc_map_graph", "figure"),
+        [Input("dcc_neighbourhood_dropdown", "value"),
+         Input("dcc_variable_dropdown", "value"),
+         Input("dcc_pie_graph", "clickData"),
+         Input("dcc_bar_graph", "selectedData"),
+         Input("button_price", "n_clicks"),
+         Input("button_pie", "n_clicks"),
+         Input("button_bar", "n_clicks")
+         ],
+         [State('input-min-price', 'value'),
+          State('input-max-price', 'value')
+         ]
+    )
+def update_map(selectedlocation, selectedvariable, selected_pie, selected_bar, button_price, button_pie, button_bar, min_price, max_price):
+
+    global aux_selected_bar_map, aux_selected_pie_map, pie_click_map, bar_click_map, aux_pie_unique_map, aux_bar_unique_map
+
     latInitial = 39
     lonInitial = -9.2
     zoomInitial = 8.5
@@ -457,21 +473,62 @@ def update_map(selectedlocation, selectedvariable):
         latInitial = list_of_neighbourhoods[selectedlocation]["lat"]
         lonInitial = list_of_neighbourhoods[selectedlocation]["lon"]
         zoomInitial = list_of_neighbourhoods[selectedlocation]["zoom"]
-
     list_params = [latInitial,lonInitial,zoomInitial]
+
+    if selected_pie:
+        selected_pie_unique = []
+        selected_pie_unique.append(selected_pie['points'][0]['label'])
+    else:
+        selected_pie_unique = room
+
+    if selected_bar:
+        selected_bar_unique = list(np.intersect1d(rates, [b['y'] for b in selected_bar['points']]))
+    else:
+        selected_bar_unique = rates
+
+    if min_price and max_price:
+        selected_hist_unique = [int(min_price), int(max_price)]
+    elif min_price:
+        selected_hist_unique = [int(min_price), price[-1]]
+    elif max_price:
+        selected_hist_unique = [price[0], int(max_price)]
+    else:
+        selected_hist_unique = price
+
+    if button_pie != pie_click_map:
+        selected_pie_unique = room
+    elif button_pie is not None and selected_pie == aux_selected_pie_map:
+        selected_pie_unique = aux_pie_unique_map
+
+    pie_click_map = button_pie
+    aux_selected_pie_map = selected_pie
+    aux_pie_unique_map = selected_pie_unique
+
+    if button_bar != bar_click_map:
+        selected_bar_unique = rates
+    elif button_bar is not None and selected_bar == aux_selected_bar_map:
+        selected_bar_unique = aux_bar_unique_map
+
+    bar_click_map = button_bar
+    aux_selected_bar_map = selected_bar
+    aux_bar_unique_map = selected_bar_unique
+
+    df_sliced_map = slice_df(neig, selected_bar_unique, selected_hist_unique, selected_pie_unique)
+
+
 
 
         # Dropdown for the variables
     if selectedvariable == "host_is_superhost":
-       return graph_params(df,list_params[0],list_params[1],list_params[2],df_colors["superhost_colors"],df_colors["superhost"])
+       return graph_params(df_sliced_map,list_params[0],list_params[1],list_params[2],df_colors["superhost_colors"],df_colors["superhost"])
 
     elif selectedvariable == "cancellation_policy":
-        return graph_params(df,list_params[0],list_params[1],list_params[2],df_colors["cancellation_colors"],df_colors["cancellation"])
+        return graph_params(df_sliced_map,list_params[0],list_params[1],list_params[2],df_colors["cancellation_colors"],df_colors["cancellation"])
 
     elif selectedvariable == "availability_next_30":
-       return graph_params(df,list_params[0], list_params[1], list_params[2], df_colors["availability_colors"],df_colors["availability"])
+       return graph_params(df_sliced_map,list_params[0], list_params[1], list_params[2], df_colors["availability_colors"],df_colors["availability"])
     else:
-        return graph_params(df, list_params[0], list_params[1], list_params[2], "#5A6FF9", "Listing")
+        return graph_params(df_sliced_map, list_params[0], list_params[1], list_params[2], "#5A6FF9", "Listing")
 
 
 @app.callback([
@@ -491,7 +548,7 @@ def update_map(selectedlocation, selectedvariable):
 
 
 def update_graph(sel_neig, selected_pie, selected_bar, button_price, button_pie, button_bar, min_price, max_price):
-    global aux_selected_bar, aux_selected_pie, pie_click, bar_click
+    global aux_selected_bar, aux_selected_pie, pie_click, bar_click, aux_pie_unique, aux_bar_unique
 
     selected_neig = []
     selected_neig.append(sel_neig)
@@ -527,27 +584,25 @@ def update_graph(sel_neig, selected_pie, selected_bar, button_price, button_pie,
     else:
         selected_hist_unique = price
 
-
-
+    # check if reset_pie was clicked
     if button_pie != pie_click:
         selected_pie_unique = room
-    elif button_pie != None and selected_pie == aux_selected_pie:
-        selected_pie_unique = room
+    elif button_pie is not None and selected_pie == aux_selected_pie:
+        selected_pie_unique = aux_pie_unique
 
     pie_click = button_pie
     aux_selected_pie = selected_pie
+    aux_pie_unique = selected_pie_unique
 
-
+    # check if reset_bar was clicked
     if button_bar != bar_click:
         selected_bar_unique = rates
-    elif button_bar != None and selected_bar == aux_selected_bar:
-        selected_bar_unique = rates
+    elif button_bar is not None and selected_bar == aux_selected_bar:
+        selected_bar_unique = aux_bar_unique
 
     bar_click = button_bar
     aux_selected_bar = selected_bar
-
-
-
+    aux_bar_unique = selected_bar_unique
 
     df_sliced = slice_df(selected_neig, selected_bar_unique, selected_hist_unique, selected_pie_unique)
 
@@ -576,6 +631,3 @@ def update_rank_municip(neighbpicked):
 
 if __name__ == '__main__':
     app.run_server()
-
-
-
