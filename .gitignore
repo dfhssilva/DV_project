@@ -1,6 +1,6 @@
 # Personalised
+documents/*
 data/airbnb_data.zip
-# data/final_df.csv
 env/
 .idea/
 .DS_Store

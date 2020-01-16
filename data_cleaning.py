@@ -35,8 +35,6 @@ df1 = list_df.loc[:, ["listing_id", "host_id", "property_id", "room_type", "amen
                       "review_scores_cleanliness", "review_scores_checkin", "review_scores_communication",
                       "review_scores_location", "review_scores_value", "cancellation_policy", "listing_url"]]
 
-df2 = calend_df.loc[:, ["listing_id", "date", "available", "price"]]
-
 df3 = host_df.loc[:, ["host_id", "host_since", "host_response_time", "host_response_rate", "host_is_superhost",
                       "host_listings_count", "host_has_profile_pic", "host_identity_verified"]]
 df3.drop_duplicates(inplace=True)
