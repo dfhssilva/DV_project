@@ -20,8 +20,6 @@ mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3
 df = pd.read_csv("./data/final_df.csv")
 
 # ----------------------------------------------------- FIGURES --------------------------------------------------------
-# TODO: Change pad between figures
-# TODO: Change file name to app.py
 def plots_actualize(df2):
 
     fig_map = go.Figure(
@@ -175,8 +173,12 @@ app.layout = html.Div(
                     children=[
                         html.P("""The following application describes the Airbnb listings of Lisbon.
                         This dashboard is fully interactive and can be used to choose the ideal place to stay in Lisbon.
-                         """, style={"padding": "30px 0"})
-                    ]  # TODO: Escrever melhor descrição
+                         """, style={"padding": "30px 0"}),
+                        html.P(
+                            """Authorship: David Silva, David Sousa, Miguel Ramos, Ricardo Florindo""",
+                            style={"padding": "0 0 0 0"}
+                        )
+                    ]
                 ),
                 html.Div(
                     id="div-header-3",
@@ -223,7 +225,7 @@ app.layout = html.Div(
                         html.P(id="percentage-listings", style={"height": "50px", "font-size": 40}),
                         "Rank of location: ",
                         html.P(id="rank-location", style={"height": "50px", "font-size": 40}),
-                    ]  # TODO: Mudar aspeto deste output. Mudar tamanho de letra do hashtag, etc.
+                    ]
                 )
             ]
         ),
@@ -525,7 +527,7 @@ def update_graph(sel_neig, selected_pie, selected_bar, button_price, button_pie,
     else:
         selected_hist_unique = price
 
-    # check_b, check_p = check_click(button_bar, button_pie)
+
 
     if button_pie != pie_click:
         selected_pie_unique = room
