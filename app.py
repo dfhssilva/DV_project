@@ -310,13 +310,13 @@ app.layout = html.Div(
                                                 dcc.Input(
                                                     id='input-min-price',
                                                     className="four columns",
-                                                    placeholder='Minimum price',
+                                                    placeholder='Min price',
                                                     type='text'
                                                 ),
                                                 dcc.Input(
                                                     id='input-max-price',
                                                     className="four columns",
-                                                    placeholder='Maximum price',
+                                                    placeholder='Max price',
                                                     type='text'
                                                 ),
                                                 html.Button('Filter', id='button_price', className="four columns")
