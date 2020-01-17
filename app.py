@@ -8,8 +8,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import numpy as np
-
-
+import webbrowser
 
 # Plotly mapbox public token
 mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ"
@@ -19,9 +18,9 @@ mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3
 # Reading Airbnb df
 df = pd.read_csv("./data/final_df.csv")
 
+
 # ----------------------------------------------------- FIGURES --------------------------------------------------------
 def plots_actualize(df2):
-
     fig_map = go.Figure(
         data=go.Scattermapbox(
             lat=df2["latitude"],
@@ -42,7 +41,7 @@ def plots_actualize(df2):
         )
     )
 
-    pie_colors = ["#5A6FF9", "#4296f5", "#42ddf5"]
+    pie_colors = ["#636EFA", "#4296f5", "#42ddf5"]
     unique_rooms = list(df2.room_type.unique())
     if len(unique_rooms) == 1:
         if unique_rooms[0] == 'Private room':
@@ -132,6 +131,7 @@ def plots_actualize(df2):
 
     return (fig_map, fig_pie, fig_bar, fig_hist)
 
+
 fig_map, fig_pie, fig_bar, fig_hist = plots_actualize(df)
 
 # ------------------------------------------------------- APP ----------------------------------------------------------
@@ -208,9 +208,9 @@ app.layout = html.Div(
                                     id='dcc_variable_dropdown',
                                     options=[{'label': i, 'value': j} for i, j in zip(
                                         ["Availability", "Superhost", "Cancellation Policy"],
-                                        ["availability_next_30", "host_is_superhost","cancellation_policy"])],
+                                        ["available", "host_is_superhost", "cancellation_policy"])],
                                     placeholder="Select Variable",
-                                    #value ="host_is_superhost",
+                                    # value ="host_is_superhost",
                                     style={'max-width': '250px'}
                                 )
                             ]
@@ -238,7 +238,7 @@ app.layout = html.Div(
                     className="eight columns pretty_container",
                     children=[
                         html.H3("Airbnb listings in Lisbon"),
-                        dcc.Graph(figure=fig_map, id="dcc_map_graph")
+                        dcc.Graph(figure=fig_map, id="dcc_map_graph", config={'displayModeBar': False})
                     ]
                 ),
                 html.Div(
@@ -338,13 +338,12 @@ app.layout = html.Div(
     ]
 )
 
-# --------------------------------------------------- CALLBACKS
-# number of obs to calculate percent listings
+# --------------------------------------------------- DATA
+
 nobs = df.shape[0]
 
-# ranking of municipalities
-location_ranking = df[["review_scores_location", "neighbourhood_group_cleansed"]]\
-    .groupby("neighbourhood_group_cleansed").mean().\
+location_ranking = df[["review_scores_location", "neighbourhood_group_cleansed"]] \
+    .groupby("neighbourhood_group_cleansed").mean(). \
     sort_values(by="review_scores_location", ascending=False).index.tolist()
 
 rates = list(df.ordinal_rating.unique())
@@ -366,6 +365,9 @@ aux_bar_unique_map = rates
 bar_click_map = 0
 pie_click_map = 0
 
+link_aux = None
+
+
 def slice_df(neig=neig, rates=rates, price=price, room=room):
     aux = df.copy()
     # slice neighbourhood
@@ -377,6 +379,11 @@ def slice_df(neig=neig, rates=rates, price=price, room=room):
     # slice price
     aux = aux.loc[(aux['price'] >= price[0]) & (aux['price'] <= price[-1])]
     return aux
+
+
+def open_link(id):
+    link = df.iloc[id, 8]
+    webbrowser.open_new_tab(link)
 
 
 list_of_neighbourhoods = {
@@ -399,42 +406,33 @@ list_of_neighbourhoods = {
     "Azambuja": {"lat": 39.0696, "lon": -8.8693, "zoom": 11},
 }
 
-# Define a new df with the colors
+# colors for variables' legend
+legend_dict = {"host_is_superhost": [[0, 1], ["Not Superhost", "Superhost"], ["rgb(203,23,29)", "rgb(0,109,44)"]],
+               "cancellation_policy": [["strict", "moderate", "flexible"], ["Strict", "Moderate", "Flexible"],
+                                       ["rgb(203,23,29)", "#fdca26", "rgb(0,109,44)"]],
+               "available": [["Low", "Medium", "High"], ["Low", "Medium", "High"],
+                             ["rgb(203,23,29)", "#fdca26", "rgb(0,109,44)"]]}
 
-df_colors = df[["property_id","host_is_superhost","cancellation_policy","available"]].set_index("property_id")
-df_colors.columns = ["superhost","cancellation","availability"]
-
-#Superhost colors
-df_colors["superhost_colors"] = "red"
-df_colors.loc[df_colors["superhost"] == 1, "superhost_colors"] = "green" #verde
-#Cancellation colors
-df_colors["cancellation_colors"]= "red" #vermelho strict
-df_colors.loc[df_colors["cancellation"] == "flexible", "cancellation_colors"] = "green"
-df_colors.loc[df_colors["cancellation"] == "moderate", "cancellation_colors"] = "yellow"
-#Availability colors
-df_colors["availability_colors"] = "red" #low
-df_colors.loc[df_colors["availability"] == "Medium", "availability_colors"] = "yellow"
-df_colors.loc[df_colors["availability"] == "High", "availability_colors"] = "green"
-
-def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
-    return go.Figure(
-        data=[
-            go.Scattermapbox(
-                #name = [legend],
-                ids=df["property_id"],
-                lat=df["latitude"],
-                lon=df["longitude"],
-                mode="markers",
-                marker=dict(
-                    color=color
-                ),
-                customdata=np.array([df.price.values, df.Years_host.values,df.pref_amenities, df.listing_url]).T,
-                hovertemplate='Price: %{customdata[0]:$.2f} <br> Nº of years as host: %{customdata[1]} <br>'
-                              ' Amenities: %{customdata[2]} <br> Link: %{customdata[3]} ',
+def graph_params(df, latInitial, lonInitial, zoomInitial, variable=None):
+    def traces_legend(df, name, color):
+        return go.Scattermapbox(
+            name=name,
+            ids=df["property_id"],
+            lat=df["latitude"],
+            lon=df["longitude"],
+            mode="markers",
+            marker=dict(
+                color=color
             ),
-        ],
-        # Layout
-        layout=go.Layout(
+            customdata=np.array([df.price.values, df.Years_host.values, df.pref_amenities, df.listing_url]).T,
+            hovertemplate='Price: %{customdata[0]:$.2f} <br> Nº of years as host: %{customdata[1]} <br> '
+                          'Amenities: %{customdata[2]}',
+        )
+    if variable:
+        slices = [df.loc[df[variable] == value] for value in legend_dict.get(variable)[0]]
+        data = [traces_legend(s, n, c) for s, n, c in zip(slices, legend_dict.get(variable)[1],
+                                                          legend_dict.get(variable)[2])]
+        layout = go.Layout(
             autosize=True,
             margin=go.layout.Margin(l=0, r=35, t=0, b=0),
             showlegend=True,
@@ -443,27 +441,67 @@ def graph_params(df,latInitial,lonInitial,zoomInitial,color,legend):
                 center={'lat': latInitial, 'lon': lonInitial},
                 zoom=zoomInitial,
                 style="dark",
+            ),
+            legend=dict(
+                bgcolor='#262626',
+                font=dict(
+                    color="white"
+                )
             )
         )
-    )
+    else:
+        data = go.Scattermapbox(
+            ids=df["property_id"],
+            lat=df["latitude"],
+            lon=df["longitude"],
+            mode="markers",
+            customdata=np.array([df.price.values, df.Years_host.values, df.pref_amenities, df.listing_url]).T,
+            hovertemplate='Price: %{customdata[0]:$.2f} <br> Nº of years as host: %{customdata[1]} <br> '
+                          'Amenities: %{customdata[2]}',
+        )
+        layout = go.Layout(
+            autosize=True,
+            margin=go.layout.Margin(l=0, r=35, t=0, b=0),
+            showlegend=False,
+            mapbox=dict(
+                accesstoken=mapbox_access_token,
+                center={'lat': latInitial, 'lon': lonInitial},
+                zoom=zoomInitial,
+                style="dark",
+            )
+        )
+    return go.Figure(data=data, layout=layout)
+
+
+# --------------------------------------------------- CALLBACKS
 
 @app.callback(
-        Output("dcc_map_graph", "figure"),
-        [Input("dcc_neighbourhood_dropdown", "value"),
-         Input("dcc_variable_dropdown", "value"),
-         Input("dcc_pie_graph", "clickData"),
-         Input("dcc_bar_graph", "selectedData"),
-         Input("button_price", "n_clicks"),
-         Input("button_pie", "n_clicks"),
-         Input("button_bar", "n_clicks")
-         ],
-         [State('input-min-price', 'value'),
-          State('input-max-price', 'value')
-         ]
-    )
-def update_map(selectedlocation, selectedvariable, selected_pie, selected_bar, button_price, button_pie, button_bar, min_price, max_price):
+    Output("dcc_map_graph", "figure"),
+    [Input("dcc_neighbourhood_dropdown", "value"),
+     Input("dcc_variable_dropdown", "value"),
+     Input("dcc_pie_graph", "clickData"),
+     Input("dcc_bar_graph", "selectedData"),
+     Input("button_price", "n_clicks"),
+     Input("button_pie", "n_clicks"),
+     Input("button_bar", "n_clicks"),
+     Input("dcc_map_graph", "clickData"),
+     ],
+    [State('input-min-price', 'value'),
+     State('input-max-price', 'value')
+     ]
+)
+def update_map(selectedlocation, selectedvariable, selected_pie, selected_bar, button_price, button_pie, button_bar,
+               list_sel, min_price, max_price):
+    global aux_selected_bar_map, aux_selected_pie_map, pie_click_map, bar_click_map, aux_pie_unique_map, aux_bar_unique_map, link_aux
 
-    global aux_selected_bar_map, aux_selected_pie_map, pie_click_map, bar_click_map, aux_pie_unique_map, aux_bar_unique_map
+    if list_sel and list_sel != link_aux:
+        print(list_sel)
+        # lat = int(list_sel['points'][0]['lat'])
+        # lon = int(list_sel['points'][0]['lon'])
+        # i = df.loc[(df['latitude'] == lat) & (df['longitude'] == lon)].index
+        i = list_sel['points'][0]['pointIndex']
+        open_link(i)
+    link_aux = list_sel
 
     latInitial = 39
     lonInitial = -9.2
@@ -473,7 +511,7 @@ def update_map(selectedlocation, selectedvariable, selected_pie, selected_bar, b
         latInitial = list_of_neighbourhoods[selectedlocation]["lat"]
         lonInitial = list_of_neighbourhoods[selectedlocation]["lon"]
         zoomInitial = list_of_neighbourhoods[selectedlocation]["zoom"]
-    list_params = [latInitial,lonInitial,zoomInitial]
+    list_params = [latInitial, lonInitial, zoomInitial]
 
     if selected_pie:
         selected_pie_unique = []
@@ -515,38 +553,27 @@ def update_map(selectedlocation, selectedvariable, selected_pie, selected_bar, b
 
     df_sliced_map = slice_df(neig, selected_bar_unique, selected_hist_unique, selected_pie_unique)
 
-
-
-
-        # Dropdown for the variables
-    if selectedvariable == "host_is_superhost":
-       return graph_params(df_sliced_map,list_params[0],list_params[1],list_params[2],df_colors["superhost_colors"],df_colors["superhost"])
-
-    elif selectedvariable == "cancellation_policy":
-        return graph_params(df_sliced_map,list_params[0],list_params[1],list_params[2],df_colors["cancellation_colors"],df_colors["cancellation"])
-
-    elif selectedvariable == "availability_next_30":
-       return graph_params(df_sliced_map,list_params[0], list_params[1], list_params[2], df_colors["availability_colors"],df_colors["availability"])
+    # Dropdown for the variables
+    if selectedvariable:
+        return graph_params(df_sliced_map, list_params[0], list_params[1], list_params[2], selectedvariable)
     else:
-        return graph_params(df_sliced_map, list_params[0], list_params[1], list_params[2], "#5A6FF9", "Listing")
+        return graph_params(df_sliced_map, list_params[0], list_params[1], list_params[2])
 
 
 @app.callback([
-     Output('dcc_pie_graph', "figure"),
-     Output('dcc_bar_graph', "figure"),
-     Output('dcc_hist_graph', "figure"),
-     Output("percentage-listings", "children"),
-    ]
+    Output('dcc_pie_graph', "figure"),
+    Output('dcc_bar_graph', "figure"),
+    Output('dcc_hist_graph', "figure"),
+    Output("percentage-listings", "children"),
+]
     , [Input("dcc_neighbourhood_dropdown", "value"),
        Input("dcc_pie_graph", "clickData"),
        Input("dcc_bar_graph", "selectedData"),
        Input("button_price", "n_clicks"),
        Input("button_pie", "n_clicks"),
        Input("button_bar", "n_clicks")],
-       [State('input-min-price', 'value'),
-        State('input-max-price', 'value')])
-
-
+    [State('input-min-price', 'value'),
+     State('input-max-price', 'value')])
 def update_graph(sel_neig, selected_pie, selected_bar, button_price, button_pie, button_bar, min_price, max_price):
     global aux_selected_bar, aux_selected_pie, pie_click, bar_click, aux_pie_unique, aux_bar_unique
 
@@ -556,10 +583,9 @@ def update_graph(sel_neig, selected_pie, selected_bar, button_price, button_pie,
     if not sel_neig:
         selected_neig = neig
         list_percent_update = ""
-    elif sel_neig=="All":
+    elif sel_neig == "All":
         selected_neig = neig
         list_percent_update = "100%"
-
 
     if selected_pie:
         selected_pie_unique = []
@@ -568,12 +594,10 @@ def update_graph(sel_neig, selected_pie, selected_bar, button_price, button_pie,
     else:
         selected_pie_unique = room
 
-
     if selected_bar:
         selected_bar_unique = list(np.intersect1d(rates, [b['y'] for b in selected_bar['points']]))
     else:
         selected_bar_unique = rates
-
 
     if min_price and max_price:
         selected_hist_unique = [int(min_price), int(max_price)]
@@ -607,12 +631,12 @@ def update_graph(sel_neig, selected_pie, selected_bar, button_price, button_pie,
     df_sliced = slice_df(selected_neig, selected_bar_unique, selected_hist_unique, selected_pie_unique)
 
     if sel_neig and sel_neig != 'All':
-        list_percent_update = "{0:.1f}%".format((df_sliced.shape[0] / nobs)*100)
-
+        list_percent_update = "{0:.1f}%".format((df_sliced.shape[0] / nobs) * 100)
 
     fig_map_update, fig_pie_update, fig_bar_update, fig_hist_update = plots_actualize(df_sliced)
 
     return fig_pie_update, fig_bar_update, fig_hist_update, list_percent_update
+
 
 @app.callback(
     Output("rank-location", "children"),
@@ -625,7 +649,7 @@ def update_rank_municip(neighbpicked):
         return ""
     else:
         return "#{}".format(
-            location_ranking.index(neighbpicked)+1
+            location_ranking.index(neighbpicked) + 1
         )
 
 
