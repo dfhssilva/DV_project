@@ -14,7 +14,7 @@ import webbrowser
 mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ"
 
 # Setting controller
-controller = webbrowser.get()
+controller = webbrowser.get('windows-default')
 
 # ------------------------------------------------- IMPORTING DATA -----------------------------------------------------
 
