@@ -13,9 +13,6 @@ import webbrowser
 # Plotly mapbox public token
 mapbox_access_token = "pk.eyJ1IjoicjIwMTY3MjciLCJhIjoiY2s1Y2N4N2hoMDBrNzNtczBjN3M4d3N4diJ9.OrgK7MnbQyOJIu6d60j_iQ"
 
-# Setting controller
-controller = webbrowser.get('windows-default')
-
 # ------------------------------------------------- IMPORTING DATA -----------------------------------------------------
 
 # Reading Airbnb df
@@ -389,7 +386,7 @@ def slice_df(neig=neig, rates=rates, price=price, room=room):
 
 def open_link(id):
     link = df.iloc[id, 8]
-    controller.open_new_tab(link)
+    webbrowser.open_new_tab(link)
 
 
 list_of_neighbourhoods = {
