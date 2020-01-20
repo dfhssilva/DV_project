@@ -267,7 +267,8 @@ app.layout = html.Div(
                                                 ),
                                             ]
                                         ),
-                                        dcc.Graph(figure=fig_pie, id="dcc_pie_graph", style={"max-height": "350px"}),
+                                        dcc.Graph(figure=fig_pie, id="dcc_pie_graph", style={"max-height": "350px"},
+                                                  config={'displayModeBar': False}),
                                     ]
                                 ),
                                 html.Div(
@@ -288,7 +289,8 @@ app.layout = html.Div(
                                         dcc.Graph(
                                             figure=fig_bar,
                                             id="dcc_bar_graph",
-                                            style={"max-height": "350px", "max-width": "300px", "margin-top": "40px"}
+                                            style={"max-height": "350px", "max-width": "300px", "margin-top": "40px"},
+                                            config={'displayModeBar': False}
                                         ),
                                     ]
                                 ),
@@ -325,7 +327,8 @@ app.layout = html.Div(
                                         dcc.Graph(
                                             figure=fig_hist,
                                             id="dcc_hist_graph",
-                                            style={"max-height": "300px", "margin-top": "40px"}
+                                            style={"max-height": "300px", "margin-top": "40px"},
+                                            config={'displayModeBar': False}
                                         ),
                                     ]
                                 )
