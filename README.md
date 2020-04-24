@@ -27,6 +27,7 @@ The report which accompanies the application can be consulted at: http://bit.ly/
 **Members:**
 - DavidSilva98
 - davidsousa98
+-	miguelramos0703
 - RFlorindo
 
 
