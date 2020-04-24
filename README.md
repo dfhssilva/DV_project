@@ -13,3 +13,19 @@ Further work can be done to integrate this dashboard with historical and dynamic
 The application was deployed using Heroku and is available through the following link: https://datavis-proj.herokuapp.com/.
 
 The report which accompanies the application can be consulted at: http://bit.ly/airbnb_dash.
+
+**Project Format:** Python File (.py)
+
+**Project Maximum Size:** None
+
+**Beginning Date:** 10th January 2020
+
+**Due Date:** 15th January 2020
+
+**Members:**
+
+- DavidSilva98
+- davidsousa98
+- RFlorindo
+
+
