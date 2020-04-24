@@ -14,6 +14,8 @@ The application was deployed using Heroku and is available through the following
 
 The report which accompanies the application can be consulted at: http://bit.ly/airbnb_dash.
 
+### Additional information:
+
 **Project Format:** Python File (.py)
 
 **Project Maximum Size:** None
@@ -23,7 +25,6 @@ The report which accompanies the application can be consulted at: http://bit.ly/
 **Due Date:** 15th January 2020
 
 **Members:**
-
 - DavidSilva98
 - davidsousa98
 - RFlorindo
