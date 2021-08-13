@@ -12,7 +12,7 @@ Further work can be done to integrate this dashboard with historical and dynamic
 
 The application was deployed using Heroku and is available through the following link: https://datavis-proj.herokuapp.com/.
 
-The report which accompanies the application can be consulted at: http://bit.ly/airbnb_dash.
+The report which accompanies the application can be consulted at: https://tinyurl.com/dv-airbnb.
 
 ### Additional information:
 
